@@ -1,14 +1,12 @@
 <template>
     <div>
-        活动中心
+        我的活动
     </div>
 </template>
 
 <script>
 export default {
-    created() {
-        console.log('activitypage ready')
-    },
+    
 }
 </script>
 
