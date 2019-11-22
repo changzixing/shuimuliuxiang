@@ -11,13 +11,14 @@ from django.core import serializers
 from django.core.files.storage import FileSystemStorage
 from TestModel import models
 from .models import ActivityInfo
+from .models import UserInfo
 import time
 import requests
 import json
 import random
 import string
 import hashlib
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from django.http import HttpResponse
 
 appid = 'wx5131007b3004e250'
@@ -70,21 +71,56 @@ def wechat_identity(request):
 @csrf_exempt
 def test(request):
     if request.method == "POST":
-            activitynum = '11111111111111'# = request.POST.get('activityNum')
-            activity = ActivityInfo()
-            activity.activityNum = activitynum
-            activity.activityPoster = request.FILES.get('photo')
-            print(0)
-            activity.save()
-            print(1)
+        activityName = request.POST.get('activityName')
+        activitynum = request.POST.get('activityNum')
+        activityOwner = request.POST.get('activityOwner')
+        activity = ActivityInfo()
+        activity.activityNum = activitynum
+        activity.activityPoster = request.FILES.get('photo')
+        activity.activityContact = request.FILES.get('scancode')
+        activity.save()
+
+        res = {'1': '1'}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+        #img = request.FILES.get('photo')
+        #if img:
+        #   print('success')
+        #models.ActivityInfo.objects.create(activityNum=activitynum, activityPoster=img)
+
+
+def getuserscore(elem):
+    return elem.userScore
+
+def score_sort():
+    users = UserInfo.objects.filter()
+    sortlist=[]
+    for i in users:
+        sortlist.append(i)
+    sortlist.sort(key=getuserscore)
+    return sortlist
+
+
+def sendMessage(request):
+    if request.method == 'POST':
+        try:
+            activitynum = request.POST.get("activityNum")
+            userID = request.POST.get("userID")
+            users = TakePartIn.objects.filter(userID=userID)
+            for i in users:
+                UserInfo.objects.filter(userID=i.userID).update(hasNewMessage = 1)
+            mes = ActivityMeaaage()
+            mes.activityNum = activitynum
+            mes.messageCOntent = request.POST.get("messageCOntent")
             res = {'1': '1'}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "wrong"}
             return HttpResponse(content=json.dumps(res), status=200)
-
-            #img = request.FILES.get('photo')
-            #if img:
-            #   print('success')
-            #models.ActivityInfo.objects.create(activityNum=activitynum, activityPoster=img)
-
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
 
 
 @csrf_exempt
