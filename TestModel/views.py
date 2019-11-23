@@ -101,7 +101,13 @@ def score_sort():
     return sortlist
 
 
-def sendMessage(request):
+def user_count(activitynum):
+    userlist = TakePartIn.objects.filter(activityNum=activitynum)
+    return len(userlist)
+
+
+@csrf_exempt
+def sendMessage(request): # 一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             activitynum = request.POST.get("activityNum")
@@ -115,6 +121,33 @@ def sendMessage(request):
             res = {'1': '1'}
             response = HttpResponse(json.dumps(res))
             return response
+        except:
+            res = {"error": "wrong"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def join_group(request): # 一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        try:
+            groupid = request.POST.get("groupID")
+            userid = request.POST.get("userID")
+            try:
+                users = GroupMember.objects.get(userID=userID)
+                res = {'wrong': 'already joined in'}
+                response = HttpResponse(json.dumps(res), status=200)
+                return response
+            except:
+                member = GroupMember()
+                member.groupID = groupid
+                member.userID = userid
+                member.save()
+                res = {'1': 'succeed'}
+                response = HttpResponse(json.dumps(res), status=200)
+                return response
         except:
             res = {"error": "wrong"}
             return HttpResponse(content=json.dumps(res), status=200)
