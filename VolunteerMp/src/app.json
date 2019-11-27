@@ -2,6 +2,7 @@
     "pages":[
         "pages/personalpage/main",
         "pages/activitypage/main",
+        "pages/messagepage/main",
         "pages/personalactive/main",
         "pages/personalcertificate/main",
         "pages/userInfo/main",
@@ -35,6 +36,18 @@
           },
           {
     
+            "pagePath": "pages/messagepage/main",
+    
+            "text": "消息盒子",
+    
+            "iconPath":"static/images/tabbar_personalpage.png",
+    
+            "selectedIconPath":"static/images/tabbar_personalpage_1.png"
+    
+          },
+
+          {
+    
             "pagePath": "pages/personalpage/main",
     
             "text": "个人中心",
@@ -44,9 +57,14 @@
             "selectedIconPath":"static/images/tabbar_personalpage_1.png"
     
           }
+          
 
         ]
-    }
+    },
+
+    "navigateToMiniProgramAppIdList": [
+      "wx1ebe3b2266f4afe0"
+    ]
     
    
 

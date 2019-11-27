@@ -10,8 +10,13 @@
                 <div class="userInfo-detail" v-if="ifLegalize" @click="toUserInfo"> > </div>
                 <div class="userInfo-detail" v-else style="color:rgb(255,255,255)"> > </div>
             </div>
-            <open-data type="userNickName"></open-data>    
+            <open-data type="userNickName"></open-data>
+            <div class="logon" v-if="ifLegalize" ></div>
+            <div class="logon" v-else @click="toLogon">
+                身份验证
+            </div>     
         </div>
+        
         <div class="userAction" v-if="ifLegalize">
             <div class="userActive" @click="toPersonalActive">
                 <img class="userActiveImg" src="../../../static/images/tabbar_personalpage.png" alt="活动图标">
@@ -49,7 +54,19 @@ export default {
         console.log('personalpage ready')
     },
 
+    onShow(){
+        var _this = this;
+        if(_this.$root.$mp.appOptions.referrerInfo.extraData){
+            _this.token = _this.$root.$mp.appOptions.referrerInfo.extraData.token;
+            console.log(_this.token);
+        }
+        console.log(_this.$root.$mp);
+        
+    },
+
     mounted() {
+        var _this = this;
+        console.log(this.GLOBAL.openid);
         wx.login({
             success: function (res) {
               console.log(res)
@@ -62,18 +79,24 @@ export default {
                 method: 'POST',
                 header: { 'content-type': 'application/x-www-form-urlencoded'},
                 success: function (res) {
-                 if (res.statusCode == 200) {
-                     if(res.data.error)
-                     {
-                         console.log(res.data.error);
-                     }
-                     else{
-                        console.log(res.data.openid);
-                     }
-                 }
-                 else {
+                if (res.statusCode == 200) {
+                    console.log(res.data);
+                    if(res.data.error)
+                    {
+                        console.log(res.data.error);
+                        _this.GLOBAL.ifLegalize = false
+                    }
+                    else
+                    {
+                        _this.GLOBAL.ifLegalize = true
+                    }
+                    _this.GLOBAL.openid = res.data.openid
+                    console.log(res.data.openid);
+                    console.log(_this.GLOBAL.openid);
+                }
+                else {
                    console.log(res.errMsg)
-                 }
+                }
               },
             })
           }
@@ -82,7 +105,8 @@ export default {
 
     data() {
         return {
-            ifLegalize:true,
+            ifLegalize:this.GLOBAL.ifLegalize,
+            token: "1",
         }
     },
     methods: {
@@ -97,6 +121,24 @@ export default {
         toPersonalcertificate(){
             //console.log("personalcertificate clicked")
             wx.navigateTo({url: '../personalcertificate/main'})
+        },
+        toLogon(){
+            wx.navigateToMiniProgram({
+                appId: "wx1ebe3b2266f4afe0",  
+                path: "pages/index/index",  
+                envVersion: "trial",  
+                extraData: {   
+                    "origin": "miniapp",
+                    "type": "id.tsinghua"  
+                },
+                success(res) {
+                    console.log("yes");
+                    // 打开成功
+                },
+                fail(res) {
+                    console.log("failed");
+                }
+            })
         },
     }
 }
@@ -165,4 +207,18 @@ export default {
     
 }
 
+.logon{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;  
+    height: 90rpx;
+    width: 300rpx;
+    margin-top: 30rpx;
+    font-size: 50rpx;
+    color: #fff;
+    background-color: rgb(122, 114, 189);
+    justify-content:center;
+    align-items: center;
+}
 </style>

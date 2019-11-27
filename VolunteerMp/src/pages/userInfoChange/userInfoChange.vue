@@ -51,6 +51,45 @@ export default {
             introduction:"还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦"
         }
     },
+
+    methods: {
+        changeInfo(){
+            var _this = this;
+            wx.request({
+                url:config.loginUrl,
+                dataType: "json",
+                data: {
+                    sex:_this.sex,
+                    volunteerId:_this.volunteerId,
+                    phoneNumber:_this.phoneNumber,
+                    email:_this.email,
+                    interest:_this.interest,
+                    introduction:_this.interest
+                },
+                method: 'POST',
+                header: { 'content-type': 'application/x-www-form-urlencoded'},
+                success: function (res) {
+                 if (res.statusCode == 200) {
+                     console.log(res.data);
+                     if(res.data.error)
+                     {
+                         console.log(res.data.error);
+                         this.GLOBAL.ifLegalize = false
+                     }
+                     else{
+                         this.GLOBAL.ifLegalize = true
+                     }
+                    this.GLOBAL.openid = res.data.openid
+                    console.log(res.data.openid);
+                     
+                 }
+                 else {
+                   console.log(res.errMsg)
+                 }
+              },
+            })
+        },
+    },
 }
 </script>
 
