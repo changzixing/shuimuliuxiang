@@ -69,6 +69,53 @@ def wechat_identity(request):
 
 
 @csrf_exempt
+def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        openid = request.POST.get("openID")
+        try:
+            user = UserInfo.objects.get(openID=openid)
+            user.userSex = request.POST.get('sex')
+            user.userZhiYuanBJ = request.POST.get('volunteerId')
+            user.userPhone = request.POST.get('phoneNumber')
+            user.userMail = request.POST.get('email')
+            user.userInterest = request.POST.get('interest')
+            user.userIntro = request.POST.get('introduction')
+            res = {'result': 'edit succeeded'}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "no such user", "openid": openid}
+            return HttpResponse(json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def send_user_info(request):  # 发送用户信息，一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        openid = request.POST.get("openID")
+        try:
+            user = UserInfo.objects.get(openID=openid)
+            sex = user.userSex
+            volunteerId = user.userZhiYuanBJ
+            phoneNumber = user.userPhone
+            email = user.userMail
+            interest = user.userInterest
+            introduction = user.userIntro
+            res = {'sex': sex, 'volunteerId': volunteerId, 'phoneNumber': phoneNumber,
+                   'email': email, 'interest': interest, 'introduction': introduction}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "no such user", "openid": openid}
+            return HttpResponse(json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
 def test(request):
     if request.method == "POST":
         activityName = request.POST.get('activityName')
@@ -95,7 +142,7 @@ def get_user_score(elem):
 
 def score_sort():
     users = UserInfo.objects.filter().order_by("userScore")
-    sortList=[]
+    sortList = []
     for i in users:
         sortList.append(i)
     # sortList.sort(key=get_user_score)
@@ -135,12 +182,15 @@ def send_message(request):  # 向所有参加用户发送信息，一个demo，�
 def get_message(request):  # 小程序端读取消息，一个demo，需要后续修改与debug
     if request.method == 'GET':
         try:
-            activityNum = request.POST.get("activityNum")
+            activityNum = request.GET.get("activityNum")
+            pageNum = request.GET.get("pageNum")
+            pageNum = int(pageNum)
             objMsgList = ActivityMessage.objects.filter(activityNum=activityNum).order_by("createTime")
             msgList = []
             for i in objMsgList:
                 msgList.append(i.messageContent)
-            res = {'content': msgList}
+            resList = msgList[pageNum*5:pageNum*5+5]
+            res = {'content': resList}
             response = HttpResponse(json.dumps(res))
             return response
         except:

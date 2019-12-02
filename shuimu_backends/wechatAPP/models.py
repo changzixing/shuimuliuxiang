@@ -6,12 +6,15 @@ class UserInfo(models.Model):
     userName = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
     userID = models.CharField(max_length=50)  # 清华学生，学号；机构用户，另外编号
+    userSex = models.CharField(max_length=10)
     department = models.CharField(max_length=50, default='')
     openID = models.CharField(max_length=50)
     userScore = models.CharField(max_length=50)
     userMail = models.CharField(max_length=50)
     userPhone = models.CharField(max_length=50)
     userZhiYuanBJ = models.CharField(max_length=50)  # 志愿北京志愿者号
+    userInterest = models.CharField(max_length=50)  # 用户兴趣
+    userIntro = models.CharField(max_length=200)  # 用户介绍
     hasNewMessage = models.CharField(max_length=5, default='')
 
 
@@ -20,7 +23,7 @@ class GroupInfo(models.Model):  # 志愿团体信息
     groupID = models.CharField(max_length=50)
 
 
-class GroupMember(models.Model): # 志愿团体成员
+class GroupMember(models.Model):  # 志愿团体成员
     groupID = models.CharField(max_length=50)
     userID = models.CharField(max_length=50)
 
