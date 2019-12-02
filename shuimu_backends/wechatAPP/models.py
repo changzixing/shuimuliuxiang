@@ -15,7 +15,7 @@ class UserInfo(models.Model):
     hasNewMessage = models.CharField(max_length=5, default='')
 
 
-class GroupInfo(models.Model): # 志愿团体信息
+class GroupInfo(models.Model):  # 志愿团体信息
     groupName = models.CharField(max_length=50)
     groupID = models.CharField(max_length=50)
 
@@ -30,11 +30,11 @@ class ActivityInfo(models.Model):
     activityNum = models.CharField(max_length=50)
     activityOwner = models.CharField(max_length=50)
     activityScore = models.CharField(max_length=50)
-    activityPoster = models.ImageField(upload_to=str("media"),default=0)
+    activityPoster = models.ImageField(upload_to=str("media"), default=0)
     activityDescribe = models.TextField(max_length=1000)
     startDate = models.DateField(default=datetime.date.today)
     endDate = models.DateField(default=datetime.date.today)
-    activityContact = models.ImageField(upload_to=str('media'), default=0) # 上传联系人/群二维码
+    activityContact = models.ImageField(upload_to=str('media'), default=0)  # 上传联系人/群二维码
 
 
 class TakePartIn(models.Model):
@@ -42,8 +42,9 @@ class TakePartIn(models.Model):
     userID = models.CharField(max_length=50)
 
 
-class ActivityMessage(models.Model): # 记录活动与信息，每条信息对应一个活动
+class ActivityMessage(models.Model):  # 记录活动与信息，每条信息对应一个活动
     activityNum = models.CharField(max_length=50)
+    createTime = models.DateTimeField(auto_now=True)
     messageContent = models.TextField(max_length=1000)
 # Create your models here.
 
