@@ -25,6 +25,7 @@ from django.http import HttpResponse
 appid = 'wx5131007b3004e250'
 secret = '6106f01b6fa163b986da283e98cf7ccb'
 
+
 @csrf_exempt
 def wechat_login(request):
     js_code = request.POST.get('code')
@@ -69,6 +70,37 @@ def wechat_identity(request):
 
 
 @csrf_exempt
+def get_activity(request):  # 小程序端获得活动列表，一个demo，需要后续修改与debug
+    if request.method == 'GET':
+        try:
+            sortFlag = request.GET.get("sortFlag")  # 排序方式
+            pageNum = request.GET.get("pageNum")  # 第几页
+            pageNum = int(pageNum)
+            actList = []
+            if sortFlag == 'time':
+                objActList = ActivityInfo.objects.filter().order_by('startDate')
+                for i in objActList:
+                    actList.append(i.activityName)
+            elif sortFlag == 'hot':
+                objActList = ActivityInfo.objects.filter().order_by('peopleCurrent')
+                for i in objActList:
+                    actList.append(i.activityName)
+            else:
+                pass
+
+            resList = actList[pageNum*5:pageNum*5+5]
+            res = {'content': resList}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "no such activityNum"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
 def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         openid = request.POST.get("openID")
@@ -80,6 +112,7 @@ def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改�
             user.userMail = request.POST.get('email')
             user.userInterest = request.POST.get('interest')
             user.userIntro = request.POST.get('introduction')
+            user.save()
             res = {'result': 'edit succeeded'}
             response = HttpResponse(json.dumps(res))
             return response
@@ -109,6 +142,36 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
             return response
         except:
             res = {"error": "no such user", "openid": openid}
+            return HttpResponse(json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def send_activity_info(request):  # 发送活动信息，一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        try:
+            activityNum = request.POST.get('activityNum')
+            activity = ActivityInfo.objects.get(activityNum=activityNum)
+
+            activityName = activity.activityName
+            activityOwner = activity.activityOwner
+            activityScore = activity.activityScore
+            startDate = activity.startDate
+            endDate = activity.endDate
+            activityContact = activity.activityContact
+            activityPoster = activity.activityPoster
+            activityDescribe = activity.activityDescribe
+            activityStatus = activity.activityStatus
+            res = {'activityName': activityName, 'activityNum': activityNum, 'activityOwner': activityOwner,
+                   'activityScore': activityScore, 'startDate': startDate, 'endDate': endDate,
+                   'activityPoster': activityPoster, 'activityContact': activityContact,
+                   'activityDescribe': activityDescribe, 'activityStatus': activityStatus}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "no such activity"}
             return HttpResponse(json.dumps(res), status=200)
     else:
         res = {"error": "wrong"}
@@ -195,6 +258,43 @@ def get_message(request):  # 小程序端读取消息，一个demo，需要后�
             return response
         except:
             res = {"error": "no such activityNum"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def join_activity(request):  # 一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        try:
+            activityNum = request.POST.get("activityNum")
+            userid = request.POST.get("userID")
+            try:
+                TakePartIn.objects.get(userID=userid)
+                res = {'wrong': 'already joined in'}
+                response = HttpResponse(json.dumps(res), status=200)
+                return response
+            except:
+                try:
+                    activity = ActivityInfo.objects.get(activityNum=activityNum)
+                    member = TakePartIn()
+                    member.groupID = activityNum
+                    member.userID = userid
+                    member.save()
+                    temp = int(activity.peopleCurrent)
+                    temp += 1
+                    temp = str(temp)
+                    ActivityInfo.objects.filter(activityNum=activityNum).update(peopleCurrent=temp)
+                    res = {'1': 'succeed'}
+                    response = HttpResponse(json.dumps(res), status=200)
+                    return response
+                except:
+                    res = {'wrong': 'no such activity'}
+                    response = HttpResponse(json.dumps(res), status=200)
+                    return response
+        except:
+            res = {"error": "wrong"}
             return HttpResponse(content=json.dumps(res), status=200)
     else:
         res = {"error": "wrong"}

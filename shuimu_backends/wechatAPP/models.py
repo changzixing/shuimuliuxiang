@@ -33,11 +33,14 @@ class ActivityInfo(models.Model):
     activityNum = models.CharField(max_length=50)
     activityOwner = models.CharField(max_length=50)
     activityScore = models.CharField(max_length=50)
+    peopleNeed = models.CharField(max_length=10)
+    peopleCurrent = models.CharField(max_length=10)
     activityPoster = models.ImageField(upload_to=str("media"), default=0)
     activityDescribe = models.TextField(max_length=1000)
     startDate = models.DateField(default=datetime.date.today)
     endDate = models.DateField(default=datetime.date.today)
     activityContact = models.ImageField(upload_to=str('media'), default=0)  # 上传联系人/群二维码
+    activityStatus = models.CharField(max_length=50)  # 活动状态：已结束/报名中/进行中/未开始等
 
 
 class TakePartIn(models.Model):
