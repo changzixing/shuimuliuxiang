@@ -15,7 +15,6 @@ class UserInfo(models.Model):
     userZhiYuanBJ = models.CharField(max_length=50)  # 志愿北京志愿者号
     userInterest = models.CharField(max_length=50)  # 用户兴趣
     userIntro = models.CharField(max_length=200)  # 用户介绍
-    hasNewMessage = models.CharField(max_length=5, default='')
 
 
 class GroupInfo(models.Model):  # 志愿团体信息
@@ -46,12 +45,16 @@ class ActivityInfo(models.Model):
 class TakePartIn(models.Model):
     activityNum = models.CharField(max_length=50)
     openID = models.CharField(max_length=50)
+    hasNewMessage = models.CharField(max_length=5, default='0')
 
 
 class ActivityMessage(models.Model):  # 记录活动与信息，每条信息对应一个活动
     activityNum = models.CharField(max_length=50)
     createTime = models.DateTimeField(auto_now=True)
     messageContent = models.TextField(max_length=1000)
+
+    class Meta:
+        ordering = ['-createTime']
 # Create your models here.
 
 

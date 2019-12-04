@@ -29,12 +29,12 @@ secret = '6106f01b6fa163b986da283e98cf7ccb'
 def wechat_login(request):
     js_code = request.POST.get('code')
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret + '&js_code=' + js_code + '&grant_type=authorization_code'
-    #response = json.loads(requests.get(url).content)
-    #if 'errcode' in response:
+    # response = json.loads(requests.get(url).content)
+    # if 'errcode' in response:
     #    return HttpResponse(response)
 
-    #openid = response['openid']
-    #session_key = response['session_key']
+    # openid = response['openid']
+    # session_key = response['session_key']
     openid = 'oo85p5LEN2BJ8rf1WJE0m03iM0lY'
     session_key = 'e867Drf5jj56PkEyO9wJhg=='
 
@@ -73,13 +73,16 @@ def wechat_identity(request):
             return HttpResponse(content=json.dumps(res), status=400)
 
 
-
 @csrf_exempt
 def get_activity(request):  # 小程序端获得活动列表，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             sortFlag = request.POST.get("sortFlag")  # 排序方式
+            if len(sortFlag) == 0:  # 默认按时间排序
+                sortFlag = 'time'
             pageNum = request.POST.get("pageNum")  # 第几页
+            if len(pageNum) == 0:  # 默认第一页
+                sortFlag = '1'
             pageNum = int(pageNum)-1
             actList = []
             if sortFlag == 'time':
@@ -102,7 +105,7 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
             res = {"error": "no such activityNum"}
             return HttpResponse(content=json.dumps(res), status=200)
     else:
-        res = {"error": "wrong"}
+        res = {"error": "wrong method"}
         return HttpResponse(content=json.dumps(res), status=200)
 
 
@@ -110,23 +113,39 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
 def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         openid = request.POST.get("openID")
+        if len(openid) == 0:
+            res = {'wrong': 'no openID'}
+            response = HttpResponse(json.dumps(res))
+            return response
         try:
             user = UserInfo.objects.get(openID=openid)
-            user.userSex = request.POST.get('sex')
-            user.userZhiYuanBJ = request.POST.get('volunteerId')
-            user.userPhone = request.POST.get('phoneNumber')
-            user.userMail = request.POST.get('email')
-            user.userInterest = request.POST.get('interest')
-            user.userIntro = request.POST.get('introduction')
+            userSex = request.POST.get('sex')
+            if len(userSex) != 0:
+                user.userSex = userSex
+            userZhiYuanBJ = request.POST.get('volunteerId')
+            if len(userZhiYuanBJ) != 0:
+                user.userZhiYuanBJ = userZhiYuanBJ
+            userPhone = request.POST.get('phoneNumber')
+            if len(userPhone) != 0:
+                user.userPhone = userPhone
+            userMail = request.POST.get('email')
+            if len(userMail) != 0:
+                user.userMail = userMail
+            userInterest = request.POST.get('interest')
+            if len(userInterest) != 0:
+                user.userInterest = userInterest
+            userIntro = request.POST.get('introduction')
+            if len(userIntro) != 0:
+                user.userIntro = userIntro
             user.save()
             res = {'result': 'edit succeeded'}
             response = HttpResponse(json.dumps(res))
             return response
         except:
-            res = {"error": "no such user", "openid": openid}
+            res = {"error": "no such user", "openID": openid}
             return HttpResponse(json.dumps(res), status=200)
     else:
-        res = {"error": "wrong"}
+        res = {"error": "wrong method"}
         return HttpResponse(content=json.dumps(res), status=200)
 
 
@@ -134,6 +153,9 @@ def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改�
 def send_user_info(request):  # 发送用户信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         openid = request.POST.get("openID")
+        if len(openid) == 0:
+            res = {"error": "no openID"}
+            return HttpResponse(json.dumps(res), status=200)
         try:
             user = UserInfo.objects.get(openID=openid)
             sex = user.userSex
@@ -150,7 +172,7 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
             res = {"error": "no such user", "openid": openid}
             return HttpResponse(json.dumps(res), status=200)
     else:
-        res = {"error": "wrong"}
+        res = {"error": "wrong method"}
         return HttpResponse(content=json.dumps(res), status=200)
 
 
@@ -164,16 +186,19 @@ def send_activity_info(request):  # 发送活动信息，一个demo，需要后�
     if request.method == 'POST':
         try:
             activityNum = request.POST.get('activityNum')
+            if len(activityNum) == 0:
+                res = {"error": "no activityNum"}
+                return HttpResponse(json.dumps(res), status=200)
             activity = ActivityInfo.objects.get(activityNum=activityNum)
             activityName = activity.activityName
             activityOwner = activity.activityOwner
             activityScore = activity.activityScore
             startDate = activity.startDate.strftime("%Y-%m-%d")
             endDate = activity.endDate.strftime("%Y-%m-%d")
-            #activityContact = activity.activityContact
+            # activityContact = activity.activityContact
             activityPoster = str(activity.activityPoster)
-            #activityDescribe = activity.activityDescribe
-            #activityStatus = activity.activityStatus
+            # activityDescribe = activity.activityDescribe
+            # activityStatus = activity.activityStatus
             res = {'activityName': activityName, 'activityNum': activityNum, 'activityOwner': activityOwner,
                    'activityScore': activityScore, 'startDate': startDate, 'endDate': endDate,
                    'activityPoster': activityPoster, }#'activityContact': activityContact,
@@ -185,7 +210,7 @@ def send_activity_info(request):  # 发送活动信息，一个demo，需要后�
             res = {"error": "no such activity"}
             return HttpResponse(json.dumps(res), status=200)
     else:
-        res = {"error": "wrong"}
+        res = {"error": "wrong method"}
         return HttpResponse(content=json.dumps(res), status=200)
 
 
@@ -246,10 +271,7 @@ def send_message(request):  # 向所有参加用户发送信息，一个demo，�
     if request.method == 'POST':
         try:
             activityNum = request.POST.get("activityNum")
-            userID = request.POST.get("userID")
-            users = TakePartIn.objects.filter(userID=userID)
-            for i in users:
-                UserInfo.objects.filter(userID=i.userID).update(hasNewMessage=1)
+            TakePartIn.objects.filter(activityNum=activityNum).update(hasNewMessage='1')
             mes = ActivityMessage()
             mes.activityNum = activityNum
             mes.messageContent = request.POST.get("messageContent")
@@ -258,7 +280,50 @@ def send_message(request):  # 向所有参加用户发送信息，一个demo，�
             response = HttpResponse(json.dumps(res))
             return response
         except:
-            res = {"error": "wrong"}
+            res = {"error": "no such openID"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong method"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def get_message_list(request):  # 小程序端读取消息，一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        try:
+            openID = request.POST.get('openID')
+            pageNum = request.POST.get('pageNum')
+            pageNum = int(pageNum)
+            pageNum -= 1
+            objActiList = TakePartIn.objects.filter(openID=openID)  # 选出该用户参加过的活动
+            activityList = []
+            for i in objActiList:
+                tempList = objActiList.filter(activityNum=i.activityNum)  # 对于每个参加了的活动
+                if len(tempList) != 1:
+                    res = {"error": "wrong"}
+                    return HttpResponse(content=json.dumps(res), status=200)
+                try:
+                    activity = ActivityInfo.objects.get(activityNum=tempList[0].activityNum)
+                except:
+                    res = {"error": "no such activity"}
+                    return HttpResponse(content=json.dumps(res), status=200)
+                try:
+                    activity2 = ActivityMessage.objects.filter(activityNum=tempList[0].activityNum)[0]
+                except:
+                    res = {"error": "no such activity"}
+                    return HttpResponse(content=json.dumps(res), status=200)
+                hasNewMes = tempList[0].hasNewMessage
+                temp = {'num': tempList[0].activityNum, 'name': activity.activityName,
+                        'time': activity2.createTime.strftime("%Y-%m-%d %H:%M:%S"), 'hasNewMes': hasNewMes}
+                activityList.append(temp)
+            activityList.sort(key=lambda x: x['createTime'], reverse=True)
+
+            resList = activityList[pageNum*5:pageNum*5+5]
+            res = {'content': resList}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "no such activityNum"}
             return HttpResponse(content=json.dumps(res), status=200)
     else:
         res = {"error": "wrong"}
@@ -266,18 +331,26 @@ def send_message(request):  # 向所有参加用户发送信息，一个demo，�
 
 
 @csrf_exempt
-def get_message(request):  # 小程序端读取消息，一个demo，需要后续修改与debug
-    if request.method == 'GET':
+def get_detail_message(request):
+    if request.method == 'POST':
         try:
-            activityNum = request.GET.get("activityNum")
-            pageNum = request.GET.get("pageNum")
+            # openID = request.POST.get('openID')
+            activityNum = request.POST.get("activityNum")
+            pageNum = request.POST.get('pageNum')
             pageNum = int(pageNum)
-            objMsgList = ActivityMessage.objects.filter(activityNum=activityNum).order_by("createTime")
+            pageNum -= 1
+            objMsgList = ActivityMessage.objects.filter(activityNum=activityNum).order_by('-createTime')
+            try:
+                activity = ActivityInfo.objects.get(activityNum=activityNum)
+            except:
+                res = {"error": "no such activity"}
+                return HttpResponse(content=json.dumps(res), status=200)
             msgList = []
             for i in objMsgList:
-                msgList.append(i.messageContent)
-            resList = msgList[pageNum*5:pageNum*5+5]
-            res = {'content': resList}
+                temp = {'content': i.messageContent, 'time': i.createTime.strftime("%Y-%m-%d %H:%M:%S")}
+                msgList.append(temp)
+            resList = msgList[pageNum * 5:pageNum * 5 + 5]
+            res = {'name': activity.activityName, 'content': resList}
             response = HttpResponse(json.dumps(res))
             return response
         except:
