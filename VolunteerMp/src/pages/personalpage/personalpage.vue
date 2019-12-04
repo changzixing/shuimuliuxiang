@@ -14,7 +14,7 @@
             <div class="logon" v-if="ifLegalize" ></div>
             <div class="logon" v-else @click="toLogon">
                 身份验证
-            </div>     
+            </div>
         </div>
         
         <div class="userAction" v-if="ifLegalize">
@@ -48,6 +48,53 @@
 <script>
 import qcloud from 'wafer2-client-sdk'
 import config from '@/config.js'
+
+var openid = 0;
+var ifLegalize = false;
+var __this;
+function Equal(p1, p2) {
+    p1 = p2;
+}
+App({
+   onShow: function(options) {
+    var extraData = null;
+    var _this = this;
+    _this.openid = openid;
+    if(options.referrerInfo.extraData){
+        extraData = options.referrerInfo.extraData;
+        _this.token = extraData.token;
+        console.log(_this.token);
+        wx.request({
+        url:config.identity,
+        dataType: "json",
+        data: {
+            token:_this.token,
+            openid:_this.openid,
+        },
+        method: 'POST',
+        header: { 'content-type': 'application/x-www-form-urlencoded'},
+        success: function (res) {
+            if (res.statusCode == 200) {
+                if(res.data.error.message == "success")
+                {
+                    ifLegalize = true;
+                    console.log(ifLegalize);
+                    __this.GLOBAL.ifLegalize = true;
+                }
+                console.log(res);
+            }
+            else {
+                console.log(res.errMsg)
+            }
+            console.log(res);
+        },
+        })
+
+    }
+  },
+})
+
+
 export default {
 
     created() {
@@ -55,18 +102,14 @@ export default {
     },
 
     onShow(){
-        var _this = this;
-        if(_this.$root.$mp.appOptions.referrerInfo.extraData){
-            _this.token = _this.$root.$mp.appOptions.referrerInfo.extraData.token;
-            console.log(_this.token);
-        }
-        console.log(_this.$root.$mp);
-        
+        this.ifLegalize = ifLegalize;
+        this.GLOBAL.ifLegalize = ifLegalize;
     },
 
     mounted() {
+        __this = this;
         var _this = this;
-        console.log(this.GLOBAL.openid);
+        ifLegalize = this.GLOBAL.ifLegalize;
         wx.login({
             success: function (res) {
               console.log(res)
@@ -90,23 +133,22 @@ export default {
                     {
                         _this.GLOBAL.ifLegalize = true
                     }
-                    _this.GLOBAL.openid = res.data.openid
-                    console.log(res.data.openid);
-                    console.log(_this.GLOBAL.openid);
+                    _this.GLOBAL.openid = res.data.openid;
+                    openid = _this.GLOBAL.openid;
                 }
                 else {
-                   console.log(res.errMsg)
+                   console.log(res.errMsg);
                 }
               },
             })
           }
+          
         })
     },
 
     data() {
         return {
             ifLegalize:this.GLOBAL.ifLegalize,
-            token: "1",
         }
     },
     methods: {
@@ -140,6 +182,9 @@ export default {
                 }
             })
         },
+        changeValue(){
+
+        }
     }
 }
 </script>

@@ -59,6 +59,7 @@ export default {
                 url:config.loginUrl,
                 dataType: "json",
                 data: {
+                    openid:_this.GLOBAL.openid,
                     sex:_this.sex,
                     volunteerId:_this.volunteerId,
                     phoneNumber:_this.phoneNumber,
@@ -70,17 +71,6 @@ export default {
                 header: { 'content-type': 'application/x-www-form-urlencoded'},
                 success: function (res) {
                  if (res.statusCode == 200) {
-                     console.log(res.data);
-                     if(res.data.error)
-                     {
-                         console.log(res.data.error);
-                         this.GLOBAL.ifLegalize = false
-                     }
-                     else{
-                         this.GLOBAL.ifLegalize = true
-                     }
-                    this.GLOBAL.openid = res.data.openid
-                    console.log(res.data.openid);
                      
                  }
                  else {
