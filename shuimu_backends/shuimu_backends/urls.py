@@ -19,6 +19,9 @@ from django.conf.urls import url, include
 import wechatAPP
 from wechatAPP import urls
 
+from django.views import static
+from django.conf import settings
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     url('^', include(wechatAPP.urls)),

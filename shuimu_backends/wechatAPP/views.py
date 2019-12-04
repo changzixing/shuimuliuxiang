@@ -25,17 +25,16 @@ from django.http import HttpResponse
 appid = 'wx5131007b3004e250'
 secret = '6106f01b6fa163b986da283e98cf7ccb'
 
-
 @csrf_exempt
 def wechat_login(request):
     js_code = request.POST.get('code')
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret + '&js_code=' + js_code + '&grant_type=authorization_code'
-    # response = json.loads(requests.get(url).content)
-    # if 'errcode' in response:
+    #response = json.loads(requests.get(url).content)
+    #if 'errcode' in response:
     #    return HttpResponse(response)
 
-    # openid = response['openid']
-    # session_key = response['session_key']
+    #openid = response['openid']
+    #session_key = response['session_key']
     openid = 'oo85p5LEN2BJ8rf1WJE0m03iM0lY'
     session_key = 'e867Drf5jj56PkEyO9wJhg=='
 
@@ -47,17 +46,22 @@ def wechat_login(request):
     return HttpResponse(json.dumps(res), status=200)
 
 
+@csrf_exempt
 def wechat_identity(request):
     if request.method == 'POST':
         try:
+            '''user = UserInfo()
+            user.openID = 'oo85p5LEN2BJ8rf1WJE0m03iM0l3'
+            user.userName = 'huqian3'
+            user.userScore = 300
+            user.department = 'THSS'
+            user.userID = '333333333'
+            user.save()'''
             openid = request.POST.get("openid")
             token = request.POST.get("token")
             url = 'https://alumni-test.iterator-traits.com/fake-id-tsinghua-proxy/api/user/session/token'
             data = {'token': token}
-            response = json.loads(requests.post(url, data=json.dumps(data)))
-            if response['user']['error']['code'] != 0:
-                res = {'error': 'no such student'}
-                return HttpResponse(content=json.dumps(res), status=201)
+            response = json.loads(requests.post(url, data=data))
             user = response['user']
             username = user['name']
             card = user['card']
@@ -69,16 +73,18 @@ def wechat_identity(request):
             return HttpResponse(content=json.dumps(res), status=400)
 
 
+
 @csrf_exempt
 def get_activity(request):  # 小程序端获得活动列表，一个demo，需要后续修改与debug
-    if request.method == 'GET':
+    if request.method == 'POST':
         try:
-            sortFlag = request.GET.get("sortFlag")  # 排序方式
-            pageNum = request.GET.get("pageNum")  # 第几页
-            pageNum = int(pageNum)
+            sortFlag = request.POST.get("sortFlag")  # 排序方式
+            pageNum = request.POST.get("pageNum")  # 第几页
+            pageNum = int(pageNum)-1
             actList = []
             if sortFlag == 'time':
                 objActList = ActivityInfo.objects.filter().order_by('startDate')
+                print(len(objActList))
                 for i in objActList:
                     actList.append(i.activityName)
             elif sortFlag == 'hot':
@@ -149,25 +155,30 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
 
 
 @csrf_exempt
+def testhtml(request):
+    return render_to_response('test.html')
+
+
+@csrf_exempt
 def send_activity_info(request):  # 发送活动信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             activityNum = request.POST.get('activityNum')
             activity = ActivityInfo.objects.get(activityNum=activityNum)
-
             activityName = activity.activityName
             activityOwner = activity.activityOwner
             activityScore = activity.activityScore
-            startDate = activity.startDate
-            endDate = activity.endDate
-            activityContact = activity.activityContact
-            activityPoster = activity.activityPoster
-            activityDescribe = activity.activityDescribe
-            activityStatus = activity.activityStatus
+            startDate = activity.startDate.strftime("%Y-%m-%d")
+            endDate = activity.endDate.strftime("%Y-%m-%d")
+            #activityContact = activity.activityContact
+            activityPoster = str(activity.activityPoster)
+            #activityDescribe = activity.activityDescribe
+            #activityStatus = activity.activityStatus
             res = {'activityName': activityName, 'activityNum': activityNum, 'activityOwner': activityOwner,
                    'activityScore': activityScore, 'startDate': startDate, 'endDate': endDate,
-                   'activityPoster': activityPoster, 'activityContact': activityContact,
-                   'activityDescribe': activityDescribe, 'activityStatus': activityStatus}
+                   'activityPoster': activityPoster, }#'activityContact': activityContact,
+                   #'activityDescribe': activityDescribe, 'activityStatus': activityStatus}
+            print(res)
             response = HttpResponse(json.dumps(res))
             return response
         except:
@@ -210,6 +221,19 @@ def score_sort():
         sortList.append(i)
     # sortList.sort(key=get_user_score)
     return sortList
+
+
+@csrf_exempt
+def test(request):
+    list = score_sort()
+    res = []
+    for user in list:
+        info = {}
+        info['username'] = user.userName
+        info['userid'] = user.userID
+        info['userscore'] = user.userScore
+        res.append(info)
+    return HttpResponse(json.dumps(res))
 
 
 def user_count(activityNum):
@@ -269,30 +293,26 @@ def join_activity(request):  # 一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             activityNum = request.POST.get("activityNum")
-            userid = request.POST.get("userID")
-            try:
-                TakePartIn.objects.get(userID=userid)
-                res = {'wrong': 'already joined in'}
-                response = HttpResponse(json.dumps(res), status=200)
-                return response
-            except:
-                try:
-                    activity = ActivityInfo.objects.get(activityNum=activityNum)
-                    member = TakePartIn()
-                    member.groupID = activityNum
-                    member.userID = userid
-                    member.save()
-                    temp = int(activity.peopleCurrent)
-                    temp += 1
-                    temp = str(temp)
-                    ActivityInfo.objects.filter(activityNum=activityNum).update(peopleCurrent=temp)
-                    res = {'1': 'succeed'}
-                    response = HttpResponse(json.dumps(res), status=200)
-                    return response
-                except:
-                    res = {'wrong': 'no such activity'}
-                    response = HttpResponse(json.dumps(res), status=200)
-                    return response
+            openid = request.POST.get("openID")
+            takepartin = TakePartIn.objects.filter(openID=openid)
+            if len(takepartin) > 0:
+                for i in takepartin:
+                    if i.activityNum == activityNum:
+                        res = {'wrong': 'already joined in'}
+                        response = HttpResponse(json.dumps(res), status=200)
+                        return response
+            activity = ActivityInfo.objects.get(activityNum=activityNum)
+            member = TakePartIn()
+            member.activityNum = activityNum
+            member.openID = openid
+            member.save()
+            temp = int(activity.peopleCurrent)
+            temp += 1
+            temp = str(temp)
+            ActivityInfo.objects.filter(activityNum=activityNum).update(peopleCurrent=temp)
+            res = {'1': 'succeed'}
+            response = HttpResponse(json.dumps(res), status=200)
+            return response
         except:
             res = {"error": "wrong"}
             return HttpResponse(content=json.dumps(res), status=200)
@@ -301,14 +321,15 @@ def join_activity(request):  # 一个demo，需要后续修改与debug
         return HttpResponse(content=json.dumps(res), status=200)
 
 
+
 @csrf_exempt
 def join_group(request):  # 一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             groupid = request.POST.get("groupID")
-            userid = request.POST.get("userID")
+            userid = request.POST.get("openID")
             try:
-                users = GroupMember.objects.get(userID=userid)
+                users = GroupMember.objects.get(openID=openid)
                 res = {'wrong': 'already joined in'}
                 response = HttpResponse(json.dumps(res), status=200)
                 return response
@@ -339,11 +360,10 @@ def create_activity(request):  # 一个demo，需要后续修改与debug
             activity.activityScore = request.POST.get('activityScore')
             activity.activityDescribe = request.POST.get('activityDescribe')
             activity.activityPoster = request.FILES.get('photo')
-            activity.activityContact = request.FILES.get('scanCode')
-            activity.startDate = request.POST.get('startDate')
-            activity.endDate = request.POST.get('endDate')
+            #activity.activityContact = request.FILES.get('scanCode')
+            activity.startDate = request.POST.get('start_date')
+            activity.endDate = request.POST.get('end_date')
             activity.save()
-
             res = {"activity_created": "1"}
             return HttpResponse(content=json.dumps(res), status=200)
         except:
@@ -355,13 +375,39 @@ def create_activity(request):  # 一个demo，需要后续修改与debug
 
 
 @csrf_exempt
+def wechat_signin(request):
+    if request.method == 'POST':
+        try:
+            qrcode = request.POST.get("qrcode")
+            openid = request.POST.get("openid")
+            users = models.UserInfo.objects.filter(openID=openid)
+            if len(users) == 0:
+                res = {"error": "no such user"}
+                return HttpResponse(json.dumps(res))
+            activity = models.ActivityInfo.objects.filter(activityNum=qrcode)
+            if len(activity) == 0:
+                res = {"error": "no valid activity"}
+                return HttpResponse(json.dumps(res))
+            take = models.TakePartIn.objects.filter(activityNum=qrcode, openID=openid)
+            if len(take) == 0:
+                res = {"error": "have not take part in"}
+                return HttpResponse(json.dumps(res))
+            res = {"1": "1"}
+            return HttpResponse(json.dumps(res))
+        except:
+            res = {"error": "wrong"}
+            return HttpResponse(json.dumps(res), status=400)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=400)
+
+
+@csrf_exempt
 def logon(request):
     if request.method == 'POST':
         try:
             username = request.POST.get("username")
             password = request.POST.get("password")
-            print(username)
-            print(password)
             if len(username) == 0 or len(password) == 0:
                 res = {"error": "invalid parameters"}
                 return HttpResponse(json.dumps(res))
@@ -404,7 +450,7 @@ def login(request):
             response["Set-Cookie"] = "session_id=" + session
             response.write(json.dumps(res))
             return response
-            # render_to_response('homepage.html')
+            #, render_to_response('homepage.html')
         except:
             res = {"error": "wrong"}
             return HttpResponse(content=json.dumps(res), status=200)

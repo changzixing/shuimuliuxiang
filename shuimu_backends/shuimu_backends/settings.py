@@ -27,7 +27,7 @@ SECRET_KEY = '-8gfh&osl^_48hk26sirr!i-o56_i%jgf_5mqr$fyj$tk82s0v'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -80,9 +80,9 @@ WSGI_APPLICATION = 'shuimu_backends.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test1',
+        'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': 'sunshijie199838', #'shuimuliuxiang2019',
+        'PASSWORD': '111111', #'shuimuliuxiang2019',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -126,3 +126,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
