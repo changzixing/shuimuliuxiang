@@ -41,9 +41,44 @@ export default {
         }
     },
 
-    mounted() {
+    onShow(){
         var _this = this;
-        console.log(_this.name);
+        wx.request({
+            url:config.userInfo,
+            dataType: "json",
+            data: {
+                openID:_this.GLOBAL.openid,
+            },
+            method: 'POST',
+            header: { 'content-type': 'application/x-www-form-urlencoded'},
+            success: function (res) {
+                if (res.statusCode == 200) {
+                    if(res.data.error){
+
+                    }
+                    else{
+                        _this.name = res.data.name;
+                        _this.studentId = res.data.studentId;
+                        _this.school = res.data.department;
+
+                        _this.sex = res.data.sex;
+                        _this.volunteerId = res.data.volunteerId;
+                        _this.phoneNumber = res.data.phoneNumber;
+                        _this.email = res.data.email;
+                        _this.interest = res.data.interest;
+                        _this.introduction = res.data.introduction;
+                    }
+                }
+                else {
+                    console.log(res.errMsg)
+                }
+                console.log(res)
+            },
+        })
+    },
+
+    mounted() {
+        
           
     },
     methods: {

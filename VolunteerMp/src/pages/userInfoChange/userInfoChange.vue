@@ -30,13 +30,14 @@
             </div>
         </div>
         
-        <div class="userInfo-changeDone">
+        <div class="userInfo-changeDone" @click="changeInfo">
             提交修改
         </div>
     </div>
 </template>
 
 <script>
+import config from '@/config.js'
 export default {
     data() {
         return {
@@ -48,34 +49,73 @@ export default {
             phoneNumber:"1",
             email:"1",
             interest:"1",
-            introduction:"还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦还没有简介哦"
+            introduction:"还没有简介哦"
         }
     },
 
+    mounted() {
+        var _this = this;
+        wx.request({
+            url:config.userInfo,
+            dataType: "json",
+            data: {
+                openID:_this.GLOBAL.openid,
+            },
+            method: 'POST',
+            header: { 'content-type': 'application/x-www-form-urlencoded'},
+            success: function (res) {
+                if (res.statusCode == 200) {
+                    if(res.data.error){
+
+                    }
+                    else{
+                        _this.name = res.data.name;
+                        _this.studentId = res.data.studentId;
+                        _this.school = res.data.department;
+
+                        _this.sex = res.data.sex;
+                        _this.volunteerId = res.data.volunteerId;
+                        _this.phoneNumber = res.data.phoneNumber;
+                        _this.email = res.data.email;
+                        _this.interest = res.data.interest;
+                        _this.introduction = res.data.introduction;
+                    }
+                }
+                else {
+                    console.log(res.errMsg)
+                }
+                console.log(res)
+            },
+        })
+    },
     methods: {
         changeInfo(){
             var _this = this;
             wx.request({
-                url:config.loginUrl,
+                url:config.userInfoChange,
                 dataType: "json",
                 data: {
-                    openid:_this.GLOBAL.openid,
+                    openID:_this.GLOBAL.openid,
                     sex:_this.sex,
                     volunteerId:_this.volunteerId,
                     phoneNumber:_this.phoneNumber,
                     email:_this.email,
                     interest:_this.interest,
-                    introduction:_this.interest
+                    introduction:_this.introduction
                 },
                 method: 'POST',
                 header: { 'content-type': 'application/x-www-form-urlencoded'},
                 success: function (res) {
                  if (res.statusCode == 200) {
-                     
+                     if(res.data.result)
+                     {
+                        wx.navigateBack({});
+                     }
                  }
                  else {
                    console.log(res.errMsg)
                  }
+                 console.log(_this)
               },
             })
         },

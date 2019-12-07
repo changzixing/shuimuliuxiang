@@ -11,7 +11,7 @@
                 <div class="userInfo-detail" v-else style="color:rgb(255,255,255)"> > </div>
             </div>
             <open-data type="userNickName"></open-data>
-            <div class="logon" v-if="ifLegalize" ></div>
+            <div v-if="ifLegalize" ></div>
             <div class="logon" v-else @click="toLogon">
                 身份验证
             </div>
@@ -60,6 +60,7 @@ App({
     var extraData = null;
     var _this = this;
     _this.openid = openid;
+    if(options){
     if(options.referrerInfo.extraData){
         extraData = options.referrerInfo.extraData;
         _this.token = extraData.token;
@@ -80,6 +81,7 @@ App({
                     ifLegalize = true;
                     console.log(ifLegalize);
                     __this.GLOBAL.ifLegalize = true;
+                    wx.navigateTo({url: '../userInfo/main'});
                 }
                 console.log(res);
             }
@@ -91,7 +93,9 @@ App({
         })
 
     }
+    }
   },
+
 })
 
 
@@ -123,18 +127,20 @@ export default {
                 header: { 'content-type': 'application/x-www-form-urlencoded'},
                 success: function (res) {
                 if (res.statusCode == 200) {
-                    console.log(res.data);
                     if(res.data.error)
                     {
                         console.log(res.data.error);
-                        _this.GLOBAL.ifLegalize = false
+                        _this.GLOBAL.ifLegalize = false;
                     }
                     else
                     {
-                        _this.GLOBAL.ifLegalize = true
+                        _this.GLOBAL.ifLegalize = true;
+                        ifLegalize = true;
+                        _this.$mp.page.onShow();
                     }
                     _this.GLOBAL.openid = res.data.openid;
                     openid = _this.GLOBAL.openid;
+                    console.log(res)
                 }
                 else {
                    console.log(res.errMsg);

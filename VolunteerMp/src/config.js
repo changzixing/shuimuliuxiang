@@ -1,11 +1,20 @@
 //配置项
 
-const loginUrl = 'http://140.143.155.46:80/wechat_login'
-const identity = 'http://140.143.155.46:80/wechat_identity'
+/* const loginUrl = 'http://140.143.155.46:80/wechat_login'
+const identity = 'http://140.143.155.46:80/wechat_identity' */
+
+const loginUrl = 'https://2019-a17.iterator-traits.com/wechat_login'
+const identity = 'https://2019-a17.iterator-traits.com/wechat_identity'
+const userInfoChange = 'https://2019-a17.iterator-traits.com/edit_user'
+const userInfo= 'https://2019-a17.iterator-traits.com/send_user_info'
+
+
 
 const config ={
     loginUrl,
-    identity
+    identity,
+    userInfoChange,
+    userInfo
 }
 
 export default config

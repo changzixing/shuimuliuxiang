@@ -1,9 +1,5 @@
 <template>
     <div>
-        <div class="moreMessage">
-            <div>更多消息</div>
-            <div @click="toMoreMessage">></div>
-        </div>
         <Messagebox v-for="message in messages" :key="message.id" :message="message"></Messagebox>
     </div>
 </template>
@@ -11,6 +7,9 @@
 <script>
 import Messagebox from "@/components/messageBox"
 export default {
+    created() {
+        console.log('messagepage ready')
+    },
     components:{
         Messagebox
     },
@@ -24,7 +23,7 @@ export default {
     },
     methods: {
         toMoreMessage(){
-            wx.navigateTo({url: '../messageDetails/main'})
+            
         }
     },
 }

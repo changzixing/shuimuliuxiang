@@ -6,7 +6,8 @@
         "pages/personalactive/main",
         "pages/personalcertificate/main",
         "pages/userInfo/main",
-        "pages/userInfoChange/main"
+        "pages/userInfoChange/main",
+        "pages/messageDetails/main"
     ],
     "window":{
         "navigationBarBackgroundColor": "#ffffff",
