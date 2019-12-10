@@ -67,8 +67,8 @@ def wechat_identity(request):
             openid = request.POST.get("openid")
             token = request.POST.get("token")
             users = models.UserInfo.objects.filter(openID=openid)
-            if len(users)!=0:
-                res = {'error':'already logged on'}
+            if len(users) != 0:
+                res = {'error': 'already logged on'}
                 return HttpResponse(json.dumps(res), status=200)
             url = 'https://alumni-test.iterator-traits.com/fake-id-tsinghua-proxy/api/user/session/token'
             data = {'token': token}
@@ -98,7 +98,7 @@ def search_activity(request):  # 目前完成了按名字搜索
             seg_list = jieba.cut_for_search(searchKeyword)
             seg_list.sort(key=lambda x: len(x), reverse=True)
             searchFlag = request.POST.get("searchFlag")  # 搜索方式
-            if len(searchFlag) == 0:  # 默认按时间排序
+            if len(searchFlag) == 0:  # 默认按名称搜索
                 searchFlag = 'name'
             pageNum = request.POST.get("pageNum")  # 第几页
             if len(pageNum) == 0:  # 默认第一页
@@ -111,7 +111,6 @@ def search_activity(request):  # 目前完成了按名字搜索
                     if len(objActList) != 0:
                         for i in objActList:
                             temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                    'endDate': i.endDate.strftime('%Y-%m-%d'),
                                     'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
                                     'peopleCurrent': i.peopleCurrent,
                                     'type': i.activityType, 'address': i.activityAddress}
@@ -122,7 +121,6 @@ def search_activity(request):  # 目前完成了按名字搜索
                     if len(objActList) != 0:
                         for i in objActList:
                             temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                    'endDate': i.endDate.strftime('%Y-%m-%d'),
                                     'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
                                     'peopleCurrent': i.peopleCurrent,
                                     'type': i.activityType, 'address': i.activityAddress}
@@ -151,8 +149,8 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
                 sortFlag = 'time'
             pageNum = request.POST.get("pageNum")  # 第几页
             if pageNum is None:  # 默认第一页
-                sortFlag = '1'
-            pageNum = int(pageNum)-1
+                pageNum = '1'
+            pageNum = int(pageNum) - 1
             actList = []
             if sortFlag == 'time':
                 objActList = ActivityInfo.objects.filter().order_by('-startDate')
@@ -179,7 +177,7 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
             else:
                 pass
 
-            resList = actList[pageNum*5:pageNum*5+5]
+            resList = actList[pageNum * 5:pageNum * 5 + 5]
             res = {'content': resList}
             response = HttpResponse(json.dumps(res))
             return response
@@ -286,8 +284,8 @@ def send_activity_info(request):  # 发送活动信息，一个demo，需要后�
             # activityStatus = activity.activityStatus
             res = {'activityName': activityName, 'activityNum': activityNum, 'activityOwner': activityOwner,
                    'activityScore': activityScore, 'startDate': startDate, 'endDate': endDate,
-                   'activityPoster': activityPoster, }#'activityContact': activityContact,
-                   #'activityDescribe': activityDescribe, 'activityStatus': activityStatus}
+                   'activityPoster': activityPoster, }  # 'activityContact': activityContact,
+            # 'activityDescribe': activityDescribe, 'activityStatus': activityStatus}
             print(res)
             response = HttpResponse(json.dumps(res))
             return response
@@ -313,7 +311,6 @@ def test(request):
         print(activity.activityPoster)
         activity.save()
         # activity.activityContact = request.FILES.get('scancode')
-
 
         res = {'1': '1'}
         return HttpResponse(content=json.dumps(res), status=200)
@@ -407,7 +404,7 @@ def get_message_list(request):  # 小程序端读取消息，一个demo，需要
                 activityList.append(temp)
             activityList.sort(key=lambda x: x['createTime'], reverse=True)
 
-            resList = activityList[pageNum*5:pageNum*5+5]
+            resList = activityList[pageNum * 5:pageNum * 5 + 5]
             res = {'content': resList}
             response = HttpResponse(json.dumps(res))
             return response
@@ -624,7 +621,7 @@ def login(request):
             response["Set-Cookie"] = "session_id=" + session
             response.write(json.dumps(res))
             return response
-            #, render_to_response('homepage.html')
+            # , render_to_response('homepage.html')
         except:
             res = {"error": "wrong"}
             return HttpResponse(content=json.dumps(res), status=200)
