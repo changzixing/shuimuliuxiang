@@ -25,6 +25,9 @@ from django.http import HttpResponse
 appid = 'wx5131007b3004e250'
 secret = '6106f01b6fa163b986da283e98cf7ccb'
 
+def homepage(request):
+    return HttpResponse(content='hompage')
+
 @csrf_exempt
 def wechat_login(request):
     js_code = request.POST.get('code')
@@ -59,15 +62,25 @@ def wechat_identity(request):
             user.save()'''
             openid = request.POST.get("openid")
             token = request.POST.get("token")
+            users = models.UserInfo.objects.filter(openID=openid)
+            if len(users)!=0:
+                res = {'error':'already logged on'}
+                return HttpResponse(json.dumps(res), status=200)
             url = 'https://alumni-test.iterator-traits.com/fake-id-tsinghua-proxy/api/user/session/token'
             data = {'token': token}
-            response = json.loads(requests.post(url, data=data))
-            user = response['user']
-            username = user['name']
-            card = user['card']
-            department = user['department']
-            models.UserInfo.objects.create(userName=username, userID=card, department=department, openID=openid)
-            return HttpResponse(json.dumps(user))
+            res = requests.post(url, data=data)
+            info = json.loads(res.content)
+            try:
+                user = UserInfo()
+                user.openID = openid
+                user.userName = info['user']['name']
+                user.userID = info['user']['card']
+                user.department = info['user']['department']
+                user.save()
+                return HttpResponse(content=res)
+            except:
+                return HttpResponse(content=json.dumps({'error':'not a student'}), status=200)
+
         except:
             res = {'error': 'wrong'}
             return HttpResponse(content=json.dumps(res), status=400)
@@ -78,10 +91,10 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
     if request.method == 'POST':
         try:
             sortFlag = request.POST.get("sortFlag")  # 排序方式
-            if len(sortFlag) == 0:  # 默认按时间排序
+            if sortFlag is None:  # 默认按时间排序
                 sortFlag = 'time'
             pageNum = request.POST.get("pageNum")  # 第几页
-            if len(pageNum) == 0:  # 默认第一页
+            if pageNum is None:  # 默认第一页
                 sortFlag = '1'
             pageNum = int(pageNum)-1
             actList = []
@@ -113,29 +126,29 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
 def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         openid = request.POST.get("openID")
-        if len(openid) == 0:
+        if openid is None:
             res = {'wrong': 'no openID'}
             response = HttpResponse(json.dumps(res))
             return response
         try:
             user = UserInfo.objects.get(openID=openid)
             userSex = request.POST.get('sex')
-            if len(userSex) != 0:
+            if userSex is not None:
                 user.userSex = userSex
             userZhiYuanBJ = request.POST.get('volunteerId')
-            if len(userZhiYuanBJ) != 0:
+            if userZhiYuanBJ is not None:
                 user.userZhiYuanBJ = userZhiYuanBJ
             userPhone = request.POST.get('phoneNumber')
-            if len(userPhone) != 0:
+            if userPhone is not None:
                 user.userPhone = userPhone
             userMail = request.POST.get('email')
-            if len(userMail) != 0:
+            if userMail is not None:
                 user.userMail = userMail
             userInterest = request.POST.get('interest')
-            if len(userInterest) != 0:
+            if userInterest is not None:
                 user.userInterest = userInterest
             userIntro = request.POST.get('introduction')
-            if len(userIntro) != 0:
+            if userIntro is not None:
                 user.userIntro = userIntro
             user.save()
             res = {'result': 'edit succeeded'}
@@ -153,18 +166,20 @@ def edit_user(request):  # 编辑用户信息，一个demo，需要后续修改�
 def send_user_info(request):  # 发送用户信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         openid = request.POST.get("openID")
-        if len(openid) == 0:
+        if openid is None:
             res = {"error": "no openID"}
             return HttpResponse(json.dumps(res), status=200)
         try:
             user = UserInfo.objects.get(openID=openid)
             sex = user.userSex
+            studentId = user.userID
+            department = user.department
             volunteerId = user.userZhiYuanBJ
             phoneNumber = user.userPhone
             email = user.userMail
             interest = user.userInterest
             introduction = user.userIntro
-            res = {'sex': sex, 'volunteerId': volunteerId, 'phoneNumber': phoneNumber,
+            res = {'sex': sex, 'volunteerId': volunteerId, 'studentId':studentId, 'department':department,'phoneNumber': phoneNumber,
                    'email': email, 'interest': interest, 'introduction': introduction}
             response = HttpResponse(json.dumps(res))
             return response
