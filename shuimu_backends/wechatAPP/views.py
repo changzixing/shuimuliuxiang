@@ -1,6 +1,3 @@
-import os
-import uuid
-
 import jieba
 from django.shortcuts import render
 
@@ -512,13 +509,25 @@ def join_group(request):  # 一个demo，需要后续修改与debug
         return HttpResponse(content=json.dumps(res), status=200)
 
 
+def gen_activityNum():
+    onumList = ActivityInfo.objects.filter()
+    if len(onumList) == 0:
+        return 10000
+    numList = []
+    for i in onumList:
+        numList.append(int(i.activityNum))
+    numList.sort()
+    activityNum = numList[-1] + 1
+    return activityNum
+
+
 @csrf_exempt
 def create_activity(request):  # 一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             activity = ActivityInfo()
             activity.activityName = request.POST.get('activityName')
-            activity.activityNum = request.POST.get('activityNum')
+            activity.activityNum = gen_activityNum()
             activity.activityOwner = request.POST.get('activityOwner')
             activity.activityScore = request.POST.get('activityScore')
             activity.activityDescribe = request.POST.get('activityDescribe')
