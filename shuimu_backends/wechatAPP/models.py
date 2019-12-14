@@ -19,6 +19,20 @@ def activity_directory_path(instance, filename):
     return os.path.join('activity', instance.activityNum, sub_folder, filename)
 
 
+def group_directory_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = '{}.{}'.format(uuid.uuid4().hex[:8], ext)
+    sub_folder = 'file'
+    if ext.lower() in ["jpg", "jpeg", "png", "gif"]:
+        sub_folder = "pic"
+    # if ext.lower() in ["pdf", "docx"]:
+    #     sub_folder = "document"
+    print(instance.activityNum)
+    print(sub_folder)
+    print(filename)
+    return os.path.join('group', instance.activityNum, sub_folder, filename)
+
+
 class UserInfo(models.Model):
     userName = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
@@ -36,7 +50,10 @@ class UserInfo(models.Model):
 
 class GroupInfo(models.Model):  # 志愿团体信息
     groupName = models.CharField(max_length=50)
+    groupIntro = models.TextField(max_length=1000, default='')
     groupID = models.CharField(max_length=50)
+    groupHead = models.ImageField(upload_to=group_directory_path, default=0)
+    groupPwd = models.CharField(max_length=50)
 
 
 class GroupMember(models.Model):  # 志愿团体成员
@@ -55,7 +72,7 @@ class ActivityInfo(models.Model):
     activityAddress = models.CharField(max_length=100, default='')
     activityDescribe = models.TextField(max_length=1000)
     activityType = models.CharField(max_length=5, default='0')
-    # activityType: 0.其他，1.文教，2.赛会，3.社区，4.医疗，5.健康
+    # activityType: 0.全部，1.文教，2.赛会，3.社区，4.医疗，5.健康，6.其他
     startDate = models.DateField(default=datetime.date.today)
     endDate = models.DateField(default=datetime.date.today)
     activityContact = models.ImageField(upload_to=activity_directory_path, default=0)  # 上传联系人/群二维码

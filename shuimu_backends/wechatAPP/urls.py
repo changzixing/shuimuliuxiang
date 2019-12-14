@@ -16,4 +16,6 @@ urlpatterns = [
     url('send_activity_info', views.send_activity_info),
     url('get_activity', views.get_activity),
     url('join_activity', views.join_activity),
+    url('send_message', views.send_message),
+    url('get_message_list', views.get_message_list),
 ]

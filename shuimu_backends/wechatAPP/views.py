@@ -14,6 +14,7 @@ from wechatAPP import models
 from .models import ActivityInfo, ActivityMessage
 from .models import UserInfo
 from .models import TakePartIn
+from .models import GroupInfo
 from .models import GroupMember
 import time
 import requests
@@ -35,7 +36,8 @@ def homepage(request):
 @csrf_exempt
 def wechat_login(request):
     js_code = request.POST.get('code')
-    url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret + '&js_code=' + js_code + '&grant_type=authorization_code'
+    url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret \
+          + '&js_code=' + js_code + '&grant_type=authorization_code'
     # response = json.loads(requests.get(url).content)
     # if 'errcode' in response:
     #    return HttpResponse(response)
@@ -91,93 +93,90 @@ def wechat_identity(request):
 
 
 @csrf_exempt
-def search_activity(request):  # 目前完成了按名字搜索
-    if request.method == 'POST':
-        try:
-            searchKeyword = request.POST.get('searchKeyword')
-            seg_list = jieba.cut_for_search(searchKeyword)
-            seg_list.sort(key=lambda x: len(x), reverse=True)
-            searchFlag = request.POST.get("searchFlag")  # 搜索方式
-            if len(searchFlag) == 0:  # 默认按名称搜索
-                searchFlag = 'name'
-            pageNum = request.POST.get("pageNum")  # 第几页
-            if len(pageNum) == 0:  # 默认第一页
-                pageNum = '1'
-            pageNum = int(pageNum) - 1
-            actList = []
-            if searchFlag == 'name':
-                for j in seg_list:
-                    objActList = ActivityInfo.objects.filter(activityName__contains=j)
-                    if len(objActList) != 0:
-                        for i in objActList:
-                            temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                    'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
-                                    'peopleCurrent': i.peopleCurrent,
-                                    'type': i.activityType, 'address': i.activityAddress}
-                            actList.append(temp)
-            elif searchFlag == 'owner':
-                for j in seg_list:
-                    objActList = ActivityInfo.objects.filter(activityOwner__contains=j)
-                    if len(objActList) != 0:
-                        for i in objActList:
-                            temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                    'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
-                                    'peopleCurrent': i.peopleCurrent,
-                                    'type': i.activityType, 'address': i.activityAddress}
-                            actList.append(temp)
-            else:
-                pass
-
-            resList = actList[pageNum * 5:pageNum * 5 + 5]
-            res = {'content': resList}
-            response = HttpResponse(json.dumps(res))
-            return response
-        except:
-            res = {"error": "no such activityNum"}
-            return HttpResponse(content=json.dumps(res), status=200)
-    else:
-        res = {"error": "wrong method"}
-        return HttpResponse(content=json.dumps(res), status=200)
-
-
-@csrf_exempt
 def get_activity(request):  # 小程序端获得活动列表，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
+            objActList = ActivityInfo.objects.filter()
+            actList = []
+
             sortFlag = request.POST.get("sortFlag")  # 排序方式
             if sortFlag is None:  # 默认按时间排序
                 sortFlag = 'time'
+
             pageNum = request.POST.get("pageNum")  # 第几页
             if pageNum is None:  # 默认第一页
                 pageNum = '1'
             pageNum = int(pageNum) - 1
-            actList = []
-            if sortFlag == 'time':
-                objActList = ActivityInfo.objects.filter().order_by('-startDate')
+
+            searchKeyword = request.POST.get('searchKeyword')  # 搜索关键字
+            seg_list = []
+            if searchKeyword is not None:
+                seg_list = jieba.cut_for_search(searchKeyword)
+                if len(seg_list) != 0:
+                    seg_list.sort(key=lambda x: len(x), reverse=True)
+
+            searchFlag = request.POST.get("searchFlag")  # 搜索类别，如名字、组织者等
+            if searchFlag is None:  # 默认按名称搜索
+                searchFlag = 'name'
+
+            activityType = request.POST.get('activityType')  # 筛选类型，如文教等
+            if activityType is not None:
+                for i in activityType:
+                    objActList = objActList.filter(activityType=i)
+
+            activityStatus = request.POST.get('activityStatus')  # 活动状态，如报名中等
+            if activityStatus is not None:
+                objActList.filter(activityStatus=activityStatus)
+
+            if len(seg_list) != 0:  # 如果搜索栏不为空，则开始搜索
+                if searchFlag == 'name':
+                    objActList = objActList.filter(activityName__contains=seg_list[0])
+                    for j in seg_list[1:]:
+                        tempActList = ActivityInfo.objects.filter(activityName__contains=j)
+                        objActList = objActList | tempActList
+                    # objActList.order_by('activityNum').distinct('activityNum')  # 去重
+                elif searchFlag == 'owner':
+                    objActList = objActList.filter(activityName__contains=seg_list[0])
+                    for j in seg_list[1:]:
+                        tempActList = ActivityInfo.objects.filter(activityName__contains=j)
+                        objActList = objActList | tempActList
+                    # objActList.order_by('activityNum').distinct('activityNum')  # 去重
+                else:
+                    res = {"error": "wrong searchFlag"}
+                    return HttpResponse(content=json.dumps(res), status=200)
+
+            if len(objActList) == 0:
+                res = {"warning": "empty search!"}
+                return HttpResponse(content=json.dumps(res), status=200)
+
+            # 搜索完成后，或搜索栏为空
+            if sortFlag == 'time':  # 按时间排序
+                objActList = objActList.order_by('-startDate')
                 print(len(objActList))
                 for i in objActList:
                     temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
                             'owner': i.activityOwner, 'peopleNeed': i.peopleNeed, 'peopleCurrent': i.peopleCurrent,
                             'type': i.activityType, 'address': i.activityAddress}
                     actList.append(temp)
-            elif sortFlag == 'hot':
-                objActList = ActivityInfo.objects.filter().order_by('peopleCurrent')
+            elif sortFlag == 'hot':  # 按热度排序
+                objActList = objActList.order_by('peopleCurrent')
                 for i in objActList:
                     temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
                             'owner': i.activityOwner, 'peopleNeed': i.peopleNeed, 'peopleCurrent': i.peopleCurrent,
                             'type': i.activityType, 'address': i.activityAddress}
                     actList.append(temp)
-            elif sortFlag == 'notFull':
-                objActList = ActivityInfo.objects.filter(peopleNeed__gt=F('peopleCurrent')).order_by('peopleCurrent')
+            elif sortFlag == 'notFull':  # 未招满
+                objActList = objActList.filter(peopleNeed__gt=F('peopleCurrent')).order_by('peopleCurrent')
                 for i in objActList:
                     temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
                             'owner': i.activityOwner, 'peopleNeed': i.peopleNeed, 'peopleCurrent': i.peopleCurrent,
                             'type': i.activityType, 'address': i.activityAddress}
                     actList.append(temp)
             else:
-                pass
+                res = {"error": "wrong sortFlag"}
+                return HttpResponse(content=json.dumps(res), status=200)
 
-            resList = actList[pageNum * 5:pageNum * 5 + 5]
+            resList = actList[pageNum * 4:pageNum * 4 + 4]  # 一页四个
             res = {'content': resList}
             response = HttpResponse(json.dumps(res))
             return response
@@ -261,11 +260,12 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
 
 @csrf_exempt
 def testhtml(request):
-    return render_to_response('test.html')
+    # return render_to_response('test.html')
+    pass
 
 
 @csrf_exempt
-def send_activity_info(request):  # 发送活动信息，一个demo，需要后续修改与debug
+def send_activity_info(request):  # 发送详细活动信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             activityNum = request.POST.get('activityNum')
@@ -334,19 +334,6 @@ def score_sort():
     return sortList
 
 
-# @csrf_exempt
-# def test(request):
-#     list = score_sort()
-#     res = []
-#     for user in list:
-#         info = {}
-#         info['username'] = user.userName
-#         info['userid'] = user.userID
-#         info['userscore'] = user.userScore
-#         res.append(info)
-#     return HttpResponse(json.dumps(res))
-
-
 def user_count(activityNum):
     userList = TakePartIn.objects.filter(activityNum=activityNum)
     return len(userList)
@@ -377,11 +364,13 @@ def send_message(request):  # 向所有参加用户发送信息，一个demo，�
 def get_message_list(request):  # 小程序端读取消息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
+            isDetail = request.POST.get('isDetail')
             openID = request.POST.get('openID')
             pageNum = request.POST.get('pageNum')
             pageNum = int(pageNum)
             pageNum -= 1
             objActiList = TakePartIn.objects.filter(openID=openID)  # 选出该用户参加过的活动
+            # print(len(objActiList))
             activityList = []
             for i in objActiList:
                 tempList = objActiList.filter(activityNum=i.activityNum)  # 对于每个参加了的活动
@@ -394,20 +383,28 @@ def get_message_list(request):  # 小程序端读取消息，一个demo，需要
                     res = {"error": "no such activity"}
                     return HttpResponse(content=json.dumps(res), status=200)
                 try:
-                    activity2 = ActivityMessage.objects.filter(activityNum=tempList[0].activityNum)[0]
+                    activity2 = ActivityMessage.objects.filter(activityNum=tempList[0].activityNum)[0]  # 第一条消息
                 except:
                     res = {"error": "no such activity"}
                     return HttpResponse(content=json.dumps(res), status=200)
                 hasNewMes = tempList[0].hasNewMessage
                 temp = {'num': tempList[0].activityNum, 'name': activity.activityName,
+                        'content': activity2.messageContent,
                         'time': activity2.createTime.strftime("%Y-%m-%d %H:%M:%S"), 'hasNewMes': hasNewMes}
                 activityList.append(temp)
-            activityList.sort(key=lambda x: x['createTime'], reverse=True)
-
-            resList = activityList[pageNum * 5:pageNum * 5 + 5]
-            res = {'content': resList}
-            response = HttpResponse(json.dumps(res))
-            return response
+            activityList.sort(key=lambda x: x['time'], reverse=True)
+            print(activityList)
+            if isDetail == 'True':
+                page = len(activityList)//7 + 1
+                resList = activityList[pageNum * 7:pageNum * 7 + 7]
+                res = {'content': resList, 'page': page}
+                response = HttpResponse(json.dumps(res))
+                return response
+            elif isDetail == 'False':
+                resList = activityList[0:3]
+                res = {'content': resList}
+                response = HttpResponse(json.dumps(res))
+                return response
         except:
             res = {"error": "no such activityNum"}
             return HttpResponse(content=json.dumps(res), status=200)
@@ -460,7 +457,16 @@ def join_activity(request):  # 一个demo，需要后续修改与debug
                         res = {'wrong': 'already joined in'}
                         response = HttpResponse(json.dumps(res), status=200)
                         return response
-            activity = ActivityInfo.objects.get(activityNum=activityNum)
+            try:
+                activity = ActivityInfo.objects.get(activityNum=activityNum)
+            except:
+                res = {'wrong': 'activity does not exist'}
+                response = HttpResponse(json.dumps(res), status=200)
+                return response
+            # if activity.peopleNeed == activity.peopleCurrent:
+            #     res = {'wrong': 'activity is full'}
+            #     response = HttpResponse(json.dumps(res), status=200)
+            #     return response
             member = TakePartIn()
             member.activityNum = activityNum
             member.openID = openid
@@ -506,6 +512,27 @@ def join_group(request):  # 一个demo，需要后续修改与debug
         return HttpResponse(content=json.dumps(res), status=200)
 
 
+@csrf_exempt
+def send_group_info(request):  # 一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        try:
+            groupID = request.POST.get('groupID')
+            try:
+                group = GroupInfo.objects.get(groupID=groupID)
+            except:
+                res = {"error": "group does not exist"}
+                return HttpResponse(content=json.dumps(res), status=200)
+            res = {"groupID": group.groupID, "groupName": group.groupName,
+                   "groupIntro": group.groupIntro, "groupHead": group.groupHead}
+            return HttpResponse(content=json.dumps(res), status=200)
+        except:
+            res = {"error": "wrong"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong method"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
 def gen_activityNum():
     onumList = ActivityInfo.objects.filter()
     if len(onumList) == 0:
@@ -542,6 +569,36 @@ def create_activity(request):  # 一个demo，需要后续修改与debug
             return HttpResponse(content=json.dumps(res), status=200)
     else:
         res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+def gen_groupID():
+    onumList = GroupInfo.objects.filter()
+    if len(onumList) == 0:
+        return 10000
+    numList = []
+    for i in onumList:
+        numList.append(int(i.groupID))
+    numList.sort()
+    groupID = numList[-1] + 1
+    return groupID
+
+
+@csrf_exempt
+def create_group(request):  # 一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        try:
+            group = GroupInfo()
+            group.groupName = request.POST.get('groupName')
+            group.groupID = str(gen_groupID())
+            group.save()
+            res = {"group_created": "1"}
+            return HttpResponse(content=json.dumps(res), status=200)
+        except:
+            res = {"error": "wrong"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong method"}
         return HttpResponse(content=json.dumps(res), status=200)
 
 
