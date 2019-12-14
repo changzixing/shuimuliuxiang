@@ -1,19 +1,15 @@
 <template>
-    <div class = "box">
-        <img src="../../static/images/tabbar_personalpage.png">
-        <div class="message">
-            <div class="messageSource">
-                {{message.name}}
-            </div>
-            <div class="messageInfo">
-                {{message.content}}
-            </div>
-        </div>
-        <div class = "messageMore">
-            <div class = "messageTime">
-                {{makeTime}}
+    <div>
+        <div class="time">{{makeTime}}</div>
+        <div class = "box">
+            <img src="../../static/images/tabbar_personalpage.png">
+            <div class="message">
+                <div class="messageInfo">
+                    {{message.content}}
+                </div>
             </div>
         </div>
+
     </div>
 </template>
 
@@ -45,17 +41,16 @@ export default {
                 }
                 else
                 {
-                    return String(month) + "-" +String(date_c)
+                    return String(month) + "-" +String(date_c) + ' ' + str_time_list[0] + ":" + str_time_list[1]
                 }
             }
             else
             {
-                return String(year) + "-" +String(month)
+                return String(year) + "-" +String(month) + "-" +String(date_c)
             }
 
         },
     },
-    
 }
 </script>
 
@@ -66,7 +61,7 @@ export default {
     flex-direction:row;  
     /*align-items: center;*/
     /* border: 2rpx solid rgb(180, 109, 109); */
-    height: 100rpx;
+    /* height: 120rpx; */
     margin: 10rpx;
     border: 2px solid #fff;  
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
@@ -86,42 +81,24 @@ export default {
     flex-direction:column;  
    /*  align-items: center;*/
     /* border: 2rpx solid rgb(180, 109, 109);  */
-    height: 100rpx;
+    height: 120rpx;
     width: 450rpx;
-}
-
-.messageSource{
-    font-size:40rpx;
-    height: 45rpx;
-    /* border: 2rpx solid rgb(180, 109, 109); */
-    margin: 5rpx;
-    display: flex;             
-    align-items: center;
 }
 
 .messageInfo{
     font-size:30rpx;
-    height: 40rpx;
     /* border: 2rpx solid rgb(180, 109, 109); */
-    margin: 5rpx;
+    margin: 10rpx;
     display: flex;             
     align-items: center; 
 }
 
-.messageMore{
+.time{
+    position: relative;      
     display:flex;  
     flex-direction:column;  
-   /*  align-items: center;*/
-    /* border: 2rpx solid rgb(180, 109, 109);  */
-    height: 100rpx;
+    align-items: center;
+    margin: 20rpx;
+    font-size: 20rpx;  
 }
-
-.messageTime{
-    margin: 5rpx;
-    height: 30rpx;
-    font-size:25rpx;
-    display: flex;             
-    align-items: center; 
-}
-
 </style>
