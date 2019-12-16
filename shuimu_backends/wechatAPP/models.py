@@ -13,11 +13,7 @@ def activity_directory_path(instance, filename):
         sub_folder = "pic"
     # if ext.lower() in ["pdf", "docx"]:
     #     sub_folder = "document"
-    print(instance.activityNum)
-    print(sub_folder)
-    print(filename)
-    return os.path.join('activity', instance.activityNum, sub_folder, filename)
-
+    return os.path.join('activity', str(instance.activityNum), sub_folder, filename)
 
 def group_directory_path(instance, filename):
     ext = filename.split('.')[-1]
@@ -31,7 +27,6 @@ def group_directory_path(instance, filename):
     print(sub_folder)
     print(filename)
     return os.path.join('group', instance.activityNum, sub_folder, filename)
-
 
 class UserInfo(models.Model):
     userName = models.CharField(max_length=50)
@@ -61,6 +56,12 @@ class GroupMember(models.Model):  # 志愿团体成员
     openID = models.CharField(max_length=50)
 
 
+class Administrator(models.Model):  #管理员
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=50)
+    sessionID = models.CharField(max_length=50)
+
+
 class ActivityInfo(models.Model):
     activityName = models.CharField(max_length=50)
     activityNum = models.CharField(max_length=50)
@@ -72,17 +73,22 @@ class ActivityInfo(models.Model):
     activityAddress = models.CharField(max_length=100, default='')
     activityDescribe = models.TextField(max_length=1000)
     activityType = models.CharField(max_length=5, default='0')
-    # activityType: 0.全部，1.文教，2.赛会，3.社区，4.医疗，5.健康，6.其他
+    # activityType: 0.其他，1.文教，2.赛会，3.社区，4.医疗，5.健康
     startDate = models.DateField(default=datetime.date.today)
     endDate = models.DateField(default=datetime.date.today)
     activityContact = models.ImageField(upload_to=activity_directory_path, default=0)  # 上传联系人/群二维码
-    activityStatus = models.CharField(max_length=50, default='')  # 活动状态：已结束/报名中/进行中/未开始等
+    activityStatus = models.CharField(max_length=50, default='')  # 活动状态：审核中/已结束/报名中/进行中/未开始等
+    signInQrcode = models.CharField(max_length=50, default='')      #签到二维码
+    signOffQrcode = models.CharField(max_length=50, default='')     #签退二维码
 
 
 class TakePartIn(models.Model):
     activityNum = models.CharField(max_length=50)
     openID = models.CharField(max_length=50)
     hasNewMessage = models.CharField(max_length=5, default='0')
+    startTime = models.CharField(max_length=50, default='')
+    endTime = models.CharField(max_length=50, default='')
+    manHours = models.CharField(max_length=50, default='')
 
 
 class ActivityMessage(models.Model):  # 记录活动与信息，每条信息对应一个活动
@@ -92,7 +98,4 @@ class ActivityMessage(models.Model):  # 记录活动与信息，每条信息对�
 
     class Meta:
         ordering = ['-createTime']
-# Create your models here.
-
-
 # Create your models here.

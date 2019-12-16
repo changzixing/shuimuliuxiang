@@ -1,9 +1,6 @@
 import jieba
+from io import BytesIO
 from django.shortcuts import render
-
-# Create your views here.
-from django.shortcuts import render
-from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
@@ -16,19 +13,21 @@ from .models import UserInfo
 from .models import TakePartIn
 from .models import GroupInfo
 from .models import GroupMember
+from .models import Administrator
 import time
 import requests
 import json
 import random
 import string
 import hashlib
+import xlwt
 from datetime import datetime, date, timedelta
-from django.http import HttpResponse
 
 appid = 'wx5131007b3004e250'
 secret = '6106f01b6fa163b986da283e98cf7ccb'
 
 
+@csrf_exempt
 def homepage(request):
     return HttpResponse(content='hompage')
 
@@ -36,8 +35,7 @@ def homepage(request):
 @csrf_exempt
 def wechat_login(request):
     js_code = request.POST.get('code')
-    url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret \
-          + '&js_code=' + js_code + '&grant_type=authorization_code'
+    url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret + '&js_code=' + js_code + '&grant_type=authorization_code'
     # response = json.loads(requests.get(url).content)
     # if 'errcode' in response:
     #    return HttpResponse(response)
@@ -93,6 +91,56 @@ def wechat_identity(request):
 
 
 @csrf_exempt
+def search_activity(request):  # 目前完成了按名字搜索
+    if request.method == 'POST':
+        try:
+            searchKeyword = request.POST.get('searchKeyword')
+            seg_list = jieba.cut_for_search(searchKeyword)
+            seg_list.sort(key=lambda x: len(x), reverse=True)
+            searchFlag = request.POST.get("searchFlag")  # 搜索方式
+            if searchFlag is None:  # 默认按名称搜索
+                searchFlag = 'name'
+            pageNum = request.POST.get("pageNum")  # 第几页
+            if pageNum is None:  # 默认第一页
+                pageNum = '1'
+            pageNum = int(pageNum) - 1
+            actList = []
+            if searchFlag == 'name':
+                for j in seg_list:
+                    objActList = ActivityInfo.objects.filter(activityName__contains=j)
+                    if len(objActList) != 0:
+                        for i in objActList:
+                            temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
+                                    'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
+                                    'peopleCurrent': i.peopleCurrent,
+                                    'type': i.activityType, 'address': i.activityAddress}
+                            actList.append(temp)
+            elif searchFlag == 'owner':
+                for j in seg_list:
+                    objActList = ActivityInfo.objects.filter(activityOwner__contains=j)
+                    if len(objActList) != 0:
+                        for i in objActList:
+                            temp = {'name': i.activityName, 'startDate': i.startDate.strftime('%Y-%m-%d'),
+                                    'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
+                                    'peopleCurrent': i.peopleCurrent,
+                                    'type': i.activityType, 'address': i.activityAddress}
+                            actList.append(temp)
+            else:
+                pass
+
+            resList = actList[pageNum * 5:pageNum * 5 + 5]
+            res = {'content': resList}
+            response = HttpResponse(json.dumps(res))
+            return response
+        except:
+            res = {"error": "no such activityNum"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong method"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
 def get_activity(request):  # 小程序端获得活动列表，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
@@ -100,17 +148,17 @@ def get_activity(request):  # 小程序端获得活动列表，一个demo，需�
             actList = []
 
             sortFlag = request.POST.get("sortFlag")  # 排序方式
-            if sortFlag is None:  # 默认按时间排序
+            if sortFlag is None or len(sortFlag) == 0:  # 默认按时间排序
                 sortFlag = 'time'
 
             pageNum = request.POST.get("pageNum")  # 第几页
-            if pageNum is None:  # 默认第一页
+            if pageNum is None or len(pageNum) == 0:  # 默认第一页
                 pageNum = '1'
             pageNum = int(pageNum) - 1
 
             searchKeyword = request.POST.get('searchKeyword')  # 搜索关键字
             seg_list = []
-            if searchKeyword is not None:
+            if searchKeyword is not None and len(searchKeyword) != 0:
                 seg_list = jieba.cut_for_search(searchKeyword)
                 if len(seg_list) != 0:
                     seg_list.sort(key=lambda x: len(x), reverse=True)
@@ -258,14 +306,30 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
         return HttpResponse(content=json.dumps(res), status=200)
 
 
-@csrf_exempt
-def testhtml(request):
-    # return render_to_response('test.html')
-    pass
+#@csrf_exempt
+#def testhtml(request):
+#    #return render(request, 'test.html')
+#    return render(request, 'login.html')
 
 
 @csrf_exempt
-def send_activity_info(request):  # 发送详细活动信息，一个demo，需要后续修改与debug
+def get_approve_list(request):
+    activities = ActivityInfo.objects.filter(activityStatus='-1')
+    res = []
+    for activity in activities:
+        activityinfo = {}
+        activityinfo['headline'] = activity.activityName
+        activityinfo['date'] = '开始日期: '+str(activity.startDate) + ' 结束日期: '+str(activity.endDate)
+        activityinfo['describe'] = activity.activityDescribe
+        activityinfo['number'] = activity.peopleNeed
+        activityinfo['place'] = activity.activityAddress
+        activityinfo['picture'] = 'media/' + str(activity.activityPoster)
+        res.append(activityinfo)
+    return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def send_activity_info(request):  # 发送活动信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             activityNum = request.POST.get('activityNum')
@@ -286,7 +350,6 @@ def send_activity_info(request):  # 发送详细活动信息，一个demo，需�
                    'activityScore': activityScore, 'startDate': startDate, 'endDate': endDate,
                    'activityPoster': activityPoster, }  # 'activityContact': activityContact,
             # 'activityDescribe': activityDescribe, 'activityStatus': activityStatus}
-            print(res)
             response = HttpResponse(json.dumps(res))
             return response
         except:
@@ -297,28 +360,20 @@ def send_activity_info(request):  # 发送详细活动信息，一个demo，需�
         return HttpResponse(content=json.dumps(res), status=200)
 
 
-@csrf_exempt
+'''@csrf_exempt
 def test(request):
     if request.method == "POST":
-        # activityName = request.POST.get('activityName')
-        activitynum = request.POST.get('activityNum')
-        # activityOwner = request.POST.get('activityOwner')
-        activity = ActivityInfo()
-        activity.activityNum = activitynum
-        print(activitynum)
-        activity.save()
-        activity.activityPoster = request.FILES.get('photo')
-        print(activity.activityPoster)
-        activity.save()
-        # activity.activityContact = request.FILES.get('scancode')
-
+        username = 'administrator'
+        password = '123456'
+        password = hashlib.md5(password.encode()).hexdigest()
+        user = Administrator()
+        user.username = username
+        user.password = password
+        user.sessionID = '0'
+        user.save()
         res = {'1': '1'}
-        return HttpResponse(content=json.dumps(res), status=200)
+        return HttpResponse(content=json.dumps(res), status=200)'''
 
-        # img = request.FILES.get('photo')
-        # if img:
-        #   print('success')
-        # models.ActivityInfo.objects.create(activityNum=activitynum, activityPoster=img)
 
 
 def get_user_score(elem):
@@ -552,15 +607,20 @@ def create_activity(request):  # 一个demo，需要后续修改与debug
             activity = ActivityInfo()
             activity.activityName = request.POST.get('activityName')
             activity.activityNum = gen_activityNum()
+            activity.peopleNeed = request.POST.get('peopleNeed')
             activity.activityOwner = request.POST.get('activityOwner')
             activity.activityScore = request.POST.get('activityScore')
             activity.activityDescribe = request.POST.get('activityDescribe')
             activity.activityPoster = request.FILES.get('photo')
-            activity.activityAddress = request.POST.get('address')
-            activity.activityType = request.POST.get('type')
-            # activity.activityContact = request.FILES.get('scanCode')
+            #activity.activityAddress = request.POST.get('address')
+            #activity.activityType = request.POST.get('type')
+            #activity.activityContact = request.FILES.get('scanCode')
             activity.startDate = request.POST.get('start_date')
             activity.endDate = request.POST.get('end_date')
+            activity.activityStatus = '-1'
+            qrcode = hashlib.md5(str(activity.activityNum).encode()).hexdigest()
+            activity.signInQrcode = 'i' + qrcode
+            activity.signOffQrcode = 'o' + qrcode
             activity.save()
             res = {"activity_created": "1"}
             return HttpResponse(content=json.dumps(res), status=200)
@@ -607,27 +667,86 @@ def wechat_signin(request):
     if request.method == 'POST':
         try:
             qrcode = request.POST.get("qrcode")
-            openid = request.POST.get("openid")
+            openid = request.POST.get("openID")
             users = models.UserInfo.objects.filter(openID=openid)
             if len(users) == 0:
-                res = {"error": "no such user"}
+                res = {"error": "no valid user"}
                 return HttpResponse(json.dumps(res))
-            activity = models.ActivityInfo.objects.filter(activityNum=qrcode)
-            if len(activity) == 0:
-                res = {"error": "no valid activity"}
+            if qrcode is None:
+                res = {"error": "no valid qrcode"}
                 return HttpResponse(json.dumps(res))
-            take = models.TakePartIn.objects.filter(activityNum=qrcode, openID=openid)
-            if len(take) == 0:
-                res = {"error": "have not take part in"}
+            #签到
+            if qrcode[0] == 'i':
+                activity = models.ActivityInfo.objects.filter(signInQrcode=qrcode)
+                if len(activity) == 0:
+                    res = {"error": "no valid qrcode"}
+                    return HttpResponse(json.dumps(res))
+                takepartin = models.TakePartIn.objects.filter(activityNum=activity[0].activityNum, openID=openid)
+                if len(takepartin) == 0:
+                    res = {"error": "have not take part in"}
+                    return HttpResponse(json.dumps(res))
+                #todo
+                print(takepartin[0].startTime)
+                if takepartin[0].startTime != '':
+                    res = {"error": "have already signed in"}
+                    return HttpResponse(json.dumps(res))
+                starttime = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+                takepartin[0].startTime = starttime
+                takepartin[0].save()
+                res = {'1': 'succeed'}
                 return HttpResponse(json.dumps(res))
-            res = {"1": "1"}
+
+            if qrcode[0] == 'o':
+                activity = models.ActivityInfo.objects.filter(signOffQrcode=qrcode)
+                if len(activity) == 0:
+                    res = {"error": "no valid qrcode"}
+                    return HttpResponse(json.dumps(res))
+                takepartin = models.TakePartIn.objects.filter(activityNum=activity[0].activityNum, openID=openid)
+                if len(takepartin) == 0:
+                    res = {"error": "have not take part in"}
+                    return HttpResponse(json.dumps(res))
+                if takepartin[0].startTime == '':
+                    res = {"error": "have not signed in"}
+                    return HttpResponse(json.dumps(res))
+                if takepartin[0].endTime != '':
+                    res = {"error": "have already signed off"}
+                    return HttpResponse(json.dumps(res))
+                endtime = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+                takepartin[0].endTime = endtime
+                takepartin[0].save()
+                res = {'1': 'succeed'}
+                return HttpResponse(json.dumps(res))
+
+            res = {"error": "no valid qrcode"}
             return HttpResponse(json.dumps(res))
+
         except:
             res = {"error": "wrong"}
             return HttpResponse(json.dumps(res), status=400)
     else:
         res = {"error": "wrong"}
         return HttpResponse(content=json.dumps(res), status=400)
+
+
+#校团委登录
+@csrf_exempt
+def CCYL_login(request):
+    if request.method == 'POST':
+        username = request.POST.get("userID")
+        password = request.POST.get("password")
+        user = Administrator.objects.filter(username=username)
+        if len(user) == 0:
+            res = [{"messege": "no such user"}]
+            return HttpResponse(json.dumps(res))
+        password = hashlib.md5(password.encode()).hexdigest()
+        if user[0].password != password:
+            res = [{"messege": "wrong password"}]
+            return HttpResponse(json.dumps(res))
+        session = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+        Administrator.objects.filter(username=username).update(sessionID=session)
+        res = HttpResponse(json.dumps([{"messege": "succeed"}]))
+        res["Set-Cookie"] = "session_id=" + session
+        return res
 
 
 @csrf_exempt
@@ -653,6 +772,22 @@ def logon(request):
     else:
         res = {"error": "wrong"}
         return HttpResponse(content=json.dumps(res), status=200)
+
+
+#页面跳转
+@csrf_exempt
+def page_render(request):
+    sessionid = request.COOKIES.get("session_id")
+    try:
+        Administrator.objects.get(sessionID=sessionid)
+        path = request.path[1:]
+        try:
+            return render(request, path)
+        except:
+            res = {"error": "wrong page"}
+            return HttpResponse(json.dumps(res))
+    except:
+        return render(request, "CCYL_login.html")
 
 
 @csrf_exempt
@@ -711,3 +846,52 @@ def logout(request):
         if request.method != "POST":
             res = {"error": "require POST"}
             return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def testpass(request):
+    name = request.POST.get('name')
+    print(name)
+    res = {"error": "require POST"}
+    return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def export_excel(request):
+
+    activitynum = request.POST.get('activityNum')
+    activityname = request.POST.get('activityName')
+    takepartin = TakePartIn.objects.filter(activityNum=activitynum)
+    response = HttpResponse(content_type='application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment;filename='+activityname+'.xls'
+    """导出excel表"""
+    if takepartin:
+        # 创建工作簿
+        ws = xlwt.Workbook(encoding='utf-8')
+        # 添加第一页数据表
+        w = ws.add_sheet('sheet1')  # 新建sheet（sheet的名称为"sheet1"）
+        # 写入表头
+        w.write(0, 0, u'序号')
+        w.write(0, 1, u'姓名')
+        w.write(0, 2, u'学号')
+        w.write(0, 3, u'工时')
+        # 写入数据
+        excel_row = 1
+        for i in takepartin:
+            student = UserInfo.objects.get(openID=i.openID)
+            name = student.userName
+            userid = student.userID
+            manhours = i.manHours
+            w.write(excel_row, 0, excel_row)
+            w.write(excel_row, 1, name)
+            w.write(excel_row, 2, userid)
+            w.write(excel_row, 3, manhours)
+            excel_row += 1
+        # 写出到IO
+        output = BytesIO()
+        ws.save(output)
+        # 重新定位到开始
+        output.seek(0)
+        response.write(output.getvalue())
+    return response
+
