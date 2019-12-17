@@ -48,7 +48,9 @@ class GroupInfo(models.Model):  # 志愿团体信息
     groupIntro = models.TextField(max_length=1000, default='')
     groupID = models.CharField(max_length=50)
     groupHead = models.ImageField(upload_to=group_directory_path, default=0)
-    groupPwd = models.CharField(max_length=50)
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=50)
+    sessionID = models.CharField(max_length=50)
 
 
 class GroupMember(models.Model):  # 志愿团体成员
@@ -57,6 +59,10 @@ class GroupMember(models.Model):  # 志愿团体成员
 
 
 class Administrator(models.Model):  #管理员
+    groupName = models.CharField(max_length=50)
+    groupIntro = models.TextField(max_length=1000, default='')
+    groupID = models.CharField(max_length=50, default='000000')
+    groupHead = models.ImageField(upload_to=group_directory_path, default=0)
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
     sessionID = models.CharField(max_length=50)
@@ -85,10 +91,10 @@ class ActivityInfo(models.Model):
 class TakePartIn(models.Model):
     activityNum = models.CharField(max_length=50)
     openID = models.CharField(max_length=50)
-    hasNewMessage = models.CharField(max_length=5, default='0')
-    startTime = models.CharField(max_length=50, default='')
-    endTime = models.CharField(max_length=50, default='')
-    manHours = models.CharField(max_length=50, default='')
+    hasNewMessage = models.CharField(max_length=5, default='0')     #消息标识
+    startTime = models.CharField(max_length=50, default='')         #签到时间
+    endTime = models.CharField(max_length=50, default='')           #签退时间
+    manHours = models.CharField(max_length=50, default='')          #工时
 
 
 class ActivityMessage(models.Model):  # 记录活动与信息，每条信息对应一个活动

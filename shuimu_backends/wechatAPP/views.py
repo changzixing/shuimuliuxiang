@@ -15,6 +15,7 @@ from .models import GroupInfo
 from .models import GroupMember
 from .models import Administrator
 import time
+from datetime import datetime
 import requests
 import json
 import random
@@ -360,19 +361,11 @@ def send_activity_info(request):  # 发送活动信息，一个demo，需要后�
         return HttpResponse(content=json.dumps(res), status=200)
 
 
-'''@csrf_exempt
+@csrf_exempt
 def test(request):
     if request.method == "POST":
-        username = 'administrator'
-        password = '123456'
-        password = hashlib.md5(password.encode()).hexdigest()
-        user = Administrator()
-        user.username = username
-        user.password = password
-        user.sessionID = '0'
-        user.save()
-        res = {'1': '1'}
-        return HttpResponse(content=json.dumps(res), status=200)'''
+        time = str(datetime.now())
+        return HttpResponse(content=json.dumps(time), status=200)
 
 
 
@@ -541,26 +534,59 @@ def join_activity(request):  # 一个demo，需要后续修改与debug
 
 
 @csrf_exempt
-def join_group(request):  # 一个demo，需要后续修改与debug
+def group_list(request):
+    if request.method == 'POST':
+        try:
+            openid = request.POST.get("openID")
+            user = UserInfo.objects.get(openID=openid)
+            content = []
+            grouplist = Administrator.objects.all()
+            for group in grouplist:
+                info = {}
+                info['groupName'] = group.groupName
+                info['groupID'] = group.groupID
+                info['groupHead'] = str(group.groupHead)
+                content.append(info)
+            grouplist = GroupInfo.objects.all()
+            for group in grouplist:
+                info = {}
+                info['groupName'] = group.groupName
+                info['groupID'] = group.groupID
+                info['groupHead'] = str(group.groupHead)
+                content.append(info)
+            res = {'content': content}
+            return HttpResponse(json.dumps(res), status=200)
+        except:
+            res = {'error': 'invalid user'}
+            return HttpResponse(json.dumps(res))
+
+
+@csrf_exempt
+def follow_group(request):  # 一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
             groupid = request.POST.get("groupID")
             openid = request.POST.get("openID")
+            user = UserInfo.objects.get(openID=openid)
+            group = GroupInfo.objects.filter(groupID=groupid)
+            if len(group) == 0:
+                group = Administrator.objects.filter(groupID=groupid)
+                if len(group) == 0:
+                    res = {'error': 'no valid group id'}
+                    return HttpResponse(json.dumps(res))
             try:
-                users = GroupMember.objects.get(openID=openid)
-                res = {'wrong': 'already joined in'}
-                response = HttpResponse(json.dumps(res), status=200)
-                return response
+                users = GroupMember.objects.get(openID=openid, groupID=groupid)
+                res = {'error': 'already followed'}
+                return HttpResponse(json.dumps(res), status=200)
             except:
                 member = GroupMember()
                 member.groupID = groupid
-                member.userID = openid
+                member.openID = openid
                 member.save()
-                res = {'1': 'succeed'}
-                response = HttpResponse(json.dumps(res), status=200)
-                return response
+                res = {'success': 'followed'}
+                return HttpResponse(json.dumps(res), status=200)
         except:
-            res = {"error": "wrong"}
+            res = {"error": "no valid user"}
             return HttpResponse(content=json.dumps(res), status=200)
     else:
         res = {"error": "wrong"}
@@ -568,20 +594,80 @@ def join_group(request):  # 一个demo，需要后续修改与debug
 
 
 @csrf_exempt
+def unfollow_group(request):
+    if request.method == 'POST':
+        openid = request.POST.get('openID')
+        groupid = request.POST.get('groupID')
+        try:
+            user = UserInfo.objects.get(openID=openid)
+            group = GroupInfo.objects.filter(groupID=groupid)
+            if len(group) == 0:
+                group = Administrator.objects.filter(groupID=groupid)
+                if len(group) == 0:
+                    res = {'error': 'no valid group'}
+                    return HttpResponse(json.dumps(res))
+            try:
+                follow = GroupMember.objects.get(openID=openid, groupID=groupid)
+                follow.delete()
+                res = {'success': 'unfollowed'}
+                return HttpResponse(json.dumps(res))
+            except:
+                res = {'error': 'already unfollowed'}
+                return HttpResponse(json.dumps(res))
+        except:
+            res = {'error': 'no valid user'}
+            return HttpResponse(json.dumps(res))
+
+@csrf_exempt
+def follow_list(request):
+    if request.method == 'POST':
+        openid = request.POST.get('openID')
+        try:
+            user = UserInfo.objects.get(openID=openid)
+            followlist = GroupMember.objects.filter(openID=openid)
+            content = []
+            for i in followlist:
+                info = {}
+                groupid = i.groupID
+                group = GroupInfo.objects.filter(groupID=groupid)
+                if len(group) == 0:
+                    group = Administrator.objects.filter(groupID=groupid)
+                    if len(group) == 0:
+                        continue
+                info['groupName'] = group[0].groupName
+                info['groupIntro'] = group[0].groupIntro
+                info['groupID'] = group[0].groupID
+                info['groupHead'] = str(group[0].groupHead)
+                content.append(info)
+            res = {'content': content}
+            return HttpResponse(json.dumps(res))
+        except:
+            res = {'error': 'no valid user'}
+            return HttpResponse(json.dumps(res))
+
+
+@csrf_exempt
 def send_group_info(request):  # 一个demo，需要后续修改与debug
     if request.method == 'POST':
         try:
+            openid = request.POST.get('openID')
+            user = UserInfo.objects.get(openID=openid)
             groupID = request.POST.get('groupID')
+            group = GroupInfo.objects.filter(groupID=groupID)
+            if len(group) == 0:
+                group = Administrator.objects.filter(groupID=groupID)
+                if len(group) == 0:
+                    res = {'error': 'no valid group'}
             try:
-                group = GroupInfo.objects.get(groupID=groupID)
+                GroupMember.objects.get(openID=openid, groupID=groupID)
+                res = {"groupID": group[0].groupID, "groupName": group[0].groupName,
+                    "groupIntro": group[0].groupIntro, "groupHead": str(group[0].groupHead), "followed": "yes"}
             except:
-                res = {"error": "group does not exist"}
-                return HttpResponse(content=json.dumps(res), status=200)
-            res = {"groupID": group.groupID, "groupName": group.groupName,
-                   "groupIntro": group.groupIntro, "groupHead": group.groupHead}
+                res = {"groupID": group[0].groupID, "groupName": group[0].groupName,
+                    "groupIntro": group[0].groupIntro, "groupHead": str(group[0].groupHead), "followed": "no"}
             return HttpResponse(content=json.dumps(res), status=200)
         except:
-            res = {"error": "wrong"}
+            res = {"error": "no valid user"}
             return HttpResponse(content=json.dumps(res), status=200)
     else:
         res = {"error": "wrong method"}
@@ -600,36 +686,7 @@ def gen_activityNum():
     return activityNum
 
 
-@csrf_exempt
-def create_activity(request):  # 一个demo，需要后续修改与debug
-    if request.method == 'POST':
-        try:
-            activity = ActivityInfo()
-            activity.activityName = request.POST.get('activityName')
-            activity.activityNum = gen_activityNum()
-            activity.peopleNeed = request.POST.get('peopleNeed')
-            activity.activityOwner = request.POST.get('activityOwner')
-            activity.activityScore = request.POST.get('activityScore')
-            activity.activityDescribe = request.POST.get('activityDescribe')
-            activity.activityPoster = request.FILES.get('photo')
-            #activity.activityAddress = request.POST.get('address')
-            #activity.activityType = request.POST.get('type')
-            #activity.activityContact = request.FILES.get('scanCode')
-            activity.startDate = request.POST.get('start_date')
-            activity.endDate = request.POST.get('end_date')
-            activity.activityStatus = '-1'
-            qrcode = hashlib.md5(str(activity.activityNum).encode()).hexdigest()
-            activity.signInQrcode = 'i' + qrcode
-            activity.signOffQrcode = 'o' + qrcode
-            activity.save()
-            res = {"activity_created": "1"}
-            return HttpResponse(content=json.dumps(res), status=200)
-        except:
-            res = {"error": "wrong"}
-            return HttpResponse(content=json.dumps(res), status=200)
-    else:
-        res = {"error": "wrong"}
-        return HttpResponse(content=json.dumps(res), status=200)
+
 
 
 def gen_groupID():
@@ -646,6 +703,7 @@ def gen_groupID():
 
 @csrf_exempt
 def create_group(request):  # 一个demo，需要后续修改与debug
+
     if request.method == 'POST':
         try:
             group = GroupInfo()
@@ -690,10 +748,10 @@ def wechat_signin(request):
                 if takepartin[0].startTime != '':
                     res = {"error": "have already signed in"}
                     return HttpResponse(json.dumps(res))
-                starttime = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+                starttime = str(datetime.now())
                 takepartin[0].startTime = starttime
                 takepartin[0].save()
-                res = {'1': 'succeed'}
+                res = {'success': 'signin'}
                 return HttpResponse(json.dumps(res))
 
             if qrcode[0] == 'o':
@@ -711,10 +769,13 @@ def wechat_signin(request):
                 if takepartin[0].endTime != '':
                     res = {"error": "have already signed off"}
                     return HttpResponse(json.dumps(res))
-                endtime = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+                endtime = str(datetime.now())
                 takepartin[0].endTime = endtime
+                p1 = datetime.strptime(takepartin[0].startTime, "%Y-%m-%d %H:%M:%S.%f")
+                p2 = datetime.strptime(takepartin[0].endTime, "%Y-%m-%d %H:%M:%S.%f")
+                takepartin[0].manHours = str(((p2-p1).seconds)/3600)
                 takepartin[0].save()
-                res = {'1': 'succeed'}
+                res = {'success': 'signoff'}
                 return HttpResponse(json.dumps(res))
 
             res = {"error": "no valid qrcode"}
@@ -728,12 +789,91 @@ def wechat_signin(request):
         return HttpResponse(content=json.dumps(res), status=400)
 
 
+@csrf_exempt
+def create_activity(request):  # 一个demo，需要后续修改与debug
+    if request.method == 'POST':
+        sessionid = request.COOKIES.get("session_id")
+        user = GroupInfo.objects.filter(sessionID=sessionid)
+        if len(user) == 0:
+            user = Administrator.objects.filter(sessionID=sessionid)
+            if len(user) == 0:
+                return HttpResponseRedirect('/CCYL_login.html')
+        try:
+            activity = ActivityInfo()
+            activity.activityName = request.POST.get('activityName')
+            activity.activityNum = gen_activityNum()
+            activity.peopleNeed = request.POST.get('peopleNeed')
+            activity.activityOwner = user[0].groupID
+            activity.activityScore = request.POST.get('activityScore')
+            activity.activityDescribe = request.POST.get('activityDescribe')
+            activity.activityPoster = request.FILES.get('activityPoster')
+            activity.activityAddress = request.POST.get('place')
+            activity.activityType = request.POST.get('type')
+            activity.activityContact = request.FILES.get('activityQrcode')
+            activity.startDate = request.POST.get('startDate')
+            activity.endDate = request.POST.get('endDate')
+            activity.activityStatus = '-1'
+            qrcode = hashlib.md5(str(activity.activityNum).encode()).hexdigest()
+            activity.signInQrcode = 'i' + qrcode
+            activity.signOffQrcode = 'o' + qrcode
+            activity.save()
+            res = {"activity_created": "1"}
+            return HttpResponse(content=json.dumps(res), status=200)
+        except:
+            res = {"error": "wrong1"}
+            return HttpResponse(content=json.dumps(res), status=200)
+    else:
+        res = {"error": "wrong"}
+        return HttpResponse(content=json.dumps(res), status=200)
+
+
+@csrf_exempt
+def get_manage_list(request):
+    sessionid = request.COOKIES.get("session_id")
+    user = GroupInfo.objects.filter(sessionID=sessionid)
+    if len(user) == 0:
+        user = Administrator.objects.filter(sessionID=sessionid)
+        if len(user) == 0:
+            return HttpResponseRedirect('/CCYL_login.html')
+    activities = ActivityInfo.objects.filter(activityOwner=user[0].groupID)
+    res = []
+    for activity in activities:
+        info = {}
+        info['headline'] = activity.activityName
+        info['num'] = activity.activityNum
+        res.append(info)
+    return HttpResponse(json.dumps(res))
+
+
+@csrf_exempt
+def manage_one_activity(request):
+    sessionid = request.COOKIES.get("session_id")
+    activitynum = request.POST.get("activityID")
+    user = GroupInfo.objects.filter(sessionID=sessionid)
+    if len(user) == 0:
+        user = Administrator.objects.filter(sessionID=sessionid)
+        if len(user) == 0:
+            return HttpResponseRedirect('/CCYL_login.html')
+    try:
+        activity = ActivityInfo.objects.get(activityNum=activitynum)
+        info = {}
+        info['start_code'] = activity.signInQrcode
+        info['end_code'] = activity.signOffQrcode
+        res = [info]
+        print(res)
+        return HttpResponse(json.dumps(res))
+    except:
+        res = {'error': 'wrong'}
+        return HttpResponse(json.dumps(res))
+
+
 #校团委登录
 @csrf_exempt
 def CCYL_login(request):
     if request.method == 'POST':
         username = request.POST.get("userID")
         password = request.POST.get("password")
+        print(username)
         user = Administrator.objects.filter(username=username)
         if len(user) == 0:
             res = [{"messege": "no such user"}]
@@ -747,6 +887,36 @@ def CCYL_login(request):
         res = HttpResponse(json.dumps([{"messege": "succeed"}]))
         res["Set-Cookie"] = "session_id=" + session
         return res
+
+
+#添加志愿团体账号
+@csrf_exempt
+def add_acc(request):
+    if request.method == "POST":
+        sessionid = request.COOKIES.get("session_id")
+        try:
+            Administrator.objects.get(sessionID=sessionid)
+            try:
+                username = request.POST.get('username')
+                groupname = request.POST.get('groupName')
+                user = GroupInfo.objects.filter(username=username)
+                if len(user) != 0:
+                    res = {'error': 'exist user name'}
+                    return HttpResponse(json.dumps(res))
+                group = GroupInfo()
+                group.username = username
+                group.groupName = groupname
+                pwd = '123456'
+                group.password = hashlib.md5(pwd.encode('utf8')).hexdigest()
+                group.save()
+                res = {'success': 'account added'}
+                return HttpResponse(json.dumps(res))
+            except:
+                res = {'error': 'wrong'}
+                return HttpResponse(json.dumps(res))
+        except:
+                return HttpResponseRedirect('/CCYL_login.html')
+
 
 
 @csrf_exempt
@@ -777,17 +947,20 @@ def logon(request):
 #页面跳转
 @csrf_exempt
 def page_render(request):
+    path = request.path[1:]
+    if path == 'CCYL_login.html':
+        return render(request, path)
     sessionid = request.COOKIES.get("session_id")
     try:
         Administrator.objects.get(sessionID=sessionid)
-        path = request.path[1:]
         try:
             return render(request, path)
         except:
             res = {"error": "wrong page"}
             return HttpResponse(json.dumps(res))
     except:
-        return render(request, "CCYL_login.html")
+        return HttpResponseRedirect('/CCYL_login.html')
+        #return render(request, "CCYL_login.html")
 
 
 @csrf_exempt
@@ -858,7 +1031,12 @@ def testpass(request):
 
 @csrf_exempt
 def export_excel(request):
-
+    sessionid = request.COOKIES.get("session_id")
+    user = GroupInfo.objects.filter(sessionID=sessionid)
+    if len(user) == 0:
+        user = Administrator.objects.filter(sessionID=sessionid)
+        if len(user) == 0:
+            return HttpResponseRedirect('/CCYL_login.html')
     activitynum = request.POST.get('activityNum')
     activityname = request.POST.get('activityName')
     takepartin = TakePartIn.objects.filter(activityNum=activitynum)
