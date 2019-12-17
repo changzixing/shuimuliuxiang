@@ -29,6 +29,7 @@ urlpatterns = [
     url('^manage_one_activity$', views.manage_one_activity),
     url('^send_message$', views.send_message),
     url('^get_message_list$', views.get_message_list),
+    url('^get_detail_message$', views.get_detail_message),
     url(r'.*\.html$', views.page_render),
     url('^test$', views.test),
 

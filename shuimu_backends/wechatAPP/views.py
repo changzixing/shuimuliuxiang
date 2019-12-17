@@ -390,6 +390,12 @@ def user_count(activityNum):
 @csrf_exempt
 def send_message(request):  # 向所有参加用户发送信息，一个demo，需要后续修改与debug
     if request.method == 'POST':
+        sessionid = request.COOKIES.get("session_id")
+        user = GroupInfo.objects.filter(sessionID=sessionid)
+        if len(user) == 0:
+            user = Administrator.objects.filter(sessionID=sessionid)
+            if len(user) == 0:
+                return HttpResponseRedirect('/CCYL_login.html')
         try:
             activityNum = request.POST.get("activityNum")
             TakePartIn.objects.filter(activityNum=activityNum).update(hasNewMessage='1')
@@ -491,13 +497,19 @@ def get_detail_message(request):
         res = {"error": "wrong"}
         return HttpResponse(content=json.dumps(res), status=200)
 
-
+#活动报名
 @csrf_exempt
 def join_activity(request):  # 一个demo，需要后续修改与debug
     if request.method == 'POST':
+        activityNum = request.POST.get("activityNum")
+        openid = request.POST.get("openID")
         try:
-            activityNum = request.POST.get("activityNum")
-            openid = request.POST.get("openID")
+            user = UserInfo.objects.get(openID=openid)
+        except:
+            res = {'error': 'no valid user'}
+            return HttpResponse(json.dumps(res))
+
+        try:
             takepartin = TakePartIn.objects.filter(openID=openid)
             if len(takepartin) > 0:
                 for i in takepartin:
@@ -511,10 +523,10 @@ def join_activity(request):  # 一个demo，需要后续修改与debug
                 res = {'wrong': 'activity does not exist'}
                 response = HttpResponse(json.dumps(res), status=200)
                 return response
-            # if activity.peopleNeed == activity.peopleCurrent:
-            #     res = {'wrong': 'activity is full'}
-            #     response = HttpResponse(json.dumps(res), status=200)
-            #     return response
+            if activity.peopleNeed == activity.peopleCurrent:
+                 res = {'wrong': 'activity is full'}
+                 response = HttpResponse(json.dumps(res), status=200)
+                 return response
             member = TakePartIn()
             member.activityNum = activityNum
             member.openID = openid
@@ -692,13 +704,13 @@ def gen_activityNum():
 def gen_groupID():
     onumList = GroupInfo.objects.filter()
     if len(onumList) == 0:
-        return 10000
+        return str(100000)
     numList = []
     for i in onumList:
         numList.append(int(i.groupID))
     numList.sort()
     groupID = numList[-1] + 1
-    return groupID
+    return str(groupID)
 
 
 @csrf_exempt
@@ -726,10 +738,7 @@ def wechat_signin(request):
         try:
             qrcode = request.POST.get("qrcode")
             openid = request.POST.get("openID")
-            users = models.UserInfo.objects.filter(openID=openid)
-            if len(users) == 0:
-                res = {"error": "no valid user"}
-                return HttpResponse(json.dumps(res))
+            user = models.UserInfo.objects.get(openID=openid)
             if qrcode is None:
                 res = {"error": "no valid qrcode"}
                 return HttpResponse(json.dumps(res))
@@ -773,7 +782,13 @@ def wechat_signin(request):
                 takepartin[0].endTime = endtime
                 p1 = datetime.strptime(takepartin[0].startTime, "%Y-%m-%d %H:%M:%S.%f")
                 p2 = datetime.strptime(takepartin[0].endTime, "%Y-%m-%d %H:%M:%S.%f")
-                takepartin[0].manHours = str(((p2-p1).seconds)/3600)
+                manHours = ((p2 - p1).seconds) / 3600
+                userScore = float(user.userScore)
+                userScore += manHours*float(activity[0].activityScore)
+                userScore = round(userScore, 1)
+                user.userScore = str(userScore)
+                user.save()
+                takepartin[0].manHours = str(manHours)
                 takepartin[0].save()
                 res = {'success': 'signoff'}
                 return HttpResponse(json.dumps(res))
@@ -906,6 +921,7 @@ def add_acc(request):
                 group = GroupInfo()
                 group.username = username
                 group.groupName = groupname
+                group.groupID = gen_groupID()
                 pwd = '123456'
                 group.password = hashlib.md5(pwd.encode('utf8')).hexdigest()
                 group.save()
