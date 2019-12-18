@@ -35,7 +35,7 @@ class UserInfo(models.Model):
     userSex = models.CharField(max_length=10)
     department = models.CharField(max_length=50, default='')
     openID = models.CharField(max_length=50)
-    userScore = models.CharField(max_length=50)
+    userScore = models.CharField(max_length=50, default='0')
     userMail = models.CharField(max_length=50)
     userPhone = models.CharField(max_length=50)
     userZhiYuanBJ = models.CharField(max_length=50)  # 志愿北京志愿者号
@@ -79,11 +79,11 @@ class ActivityInfo(models.Model):
     activityAddress = models.CharField(max_length=100, default='')
     activityDescribe = models.TextField(max_length=1000)
     activityType = models.CharField(max_length=5, default='0')
-    # activityType: 0.其他，1.文教，2.赛会，3.社区，4.医疗，5.健康
+    # activityType: 0.文教，1.赛会，2.社区，3.医疗，4.健康, 5.其他，
     startDate = models.DateField(default=datetime.date.today)
     endDate = models.DateField(default=datetime.date.today)
     activityContact = models.ImageField(upload_to=activity_directory_path, default=0)  # 上传联系人/群二维码
-    activityStatus = models.CharField(max_length=50, default='')  # 活动状态：审核中/已结束/报名中/进行中/未开始等
+    activityStatus = models.CharField(max_length=50, default='')  # 活动状态：-2:未通过/-1:审核中/0:报名中/1:截止报名/2:进行中/3:已结束
     signInQrcode = models.CharField(max_length=50, default='')      #签到二维码
     signOffQrcode = models.CharField(max_length=50, default='')     #签退二维码
 
