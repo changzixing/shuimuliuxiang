@@ -5,7 +5,9 @@
         </view>
         <view class="activityList">
             <view class="activityList" v-if="pageAll > 0">
-                <activitybox v-for="activity in activities" :key="activity.id" :activity="activity"></activitybox>
+                <view class="activityList" v-for="activity in activities" :key="activity.id" @click="toActivityDetails(activity.number)">
+                    <activitybox :activity="activity"></activitybox>
+                </view>
             </view>
         </view>
         <view class="pageNum">
@@ -62,11 +64,13 @@ export default {
 
     data() {
         return {
-            buttonText:"< 返回个人中心",
+            activities:[
+
+            ],
             activityStatus:"doing",
             activityStatuss:[
-                { name: 'willdo', value: '未开始', picked: true},
-                { name: 'doing', value: '进行中', picked: false},
+                { name: 'willdo', value: '未开始', picked: false},
+                { name: 'doing', value: '进行中', picked: true},
                 { name: 'done', value: '已完成', picked: false},
             ],
             pageNum: 1,
@@ -102,6 +106,9 @@ export default {
                 _this.$mp.page.onShow();
             }
         },
+        toActivityDetails(activityNum){
+            wx.navigateTo({url: '../activityDetails/main?activityNum='+activityNum});
+        },
     },
 }
 </script>
@@ -116,7 +123,6 @@ export default {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    /*border: 2rpx solid #000;*/
 }
 
 .activityStatus {

@@ -1,30 +1,32 @@
 <template>
     <view class="page">
-            <view class="search1">
-                <input class="textBar" v-model="searchText">
-                <view class="searchButton" @click="search()">搜索</view>
-            </view>
-            <view class="search2">
-                <view v-for="searchFlag in searchFlags" :key="searchFlag.name" :class="searchFlag.picked ? 'searchFlag1' : 'searchFlag2'" @click="searchFlagChange(searchFlag)">{{searchFlag.value}}</view>
-            </view>
-            <view class="activity1">
-                <view v-for="activityType in activityTypes" :key="activityType.code" :class="activityType.picked ? 'activityType1' : 'activityType2'" @click="activityTypeChange(activityType)">{{activityType.value}}</view>
-            </view>
-            <view class="activity2">
-                <view v-for="sortFlag in sortFlags" :key="sortFlag.name" :class="sortFlag.picked ? 'sortFlag1' : 'sortFlag2'" @click="sortFlagChange(sortFlag)">{{sortFlag.value}}</view>
-            </view>
-            <view class="activity3">
-                <view class="activity3" v-if="pageAll > 0">
-                    <activitybox v-for="activity in activities" :key="activity.id" :activity="activity"></activitybox>
+        <view class="search1">
+            <input class="textBar" v-model="searchText">
+            <view class="searchButton" @click="search()">搜索</view>
+        </view>
+        <view class="search2">
+            <view v-for="searchFlag in searchFlags" :key="searchFlag.id" :class="searchFlag.picked ? 'searchFlag1' : 'searchFlag2'" @click="searchFlagChange(searchFlag)">{{searchFlag.value}}</view>
+        </view>
+        <view class="activity1">
+            <view v-for="activityType in activityTypes" :key="activityType.id" :class="activityType.picked ? 'activityType1' : 'activityType2'" @click="activityTypeChange(activityType)">{{activityType.value}}</view>
+        </view>
+        <view class="activity2">
+            <view v-for="sortFlag in sortFlags" :key="sortFlag.id" :class="sortFlag.picked ? 'sortFlag1' : 'sortFlag2'" @click="sortFlagChange(sortFlag)">{{sortFlag.value}}</view>
+        </view>
+        <view class="activity3">
+            <view class="activity3" v-if="pageAll > 0">
+                <view class="activity3" v-for="activity in activities" :key="activity.id" @click="toActivityDetails(activity.number)">
+                    <activitybox :activity="activity"></activitybox>
                 </view>
             </view>
-            <view class="activity4">
-                <view @click="lastPage()">上一页</view>
-                <view v-if="pageAll > 0">{{pageNum}} / {{pageAll}}</view>
-                <view v-else>1 / 1</view>
-                <view @click="nextPage()">下一页</view>
-            </view>
         </view>
+        <view class="activity4">
+            <view @click="lastPage()">上一页</view>
+            <view v-if="pageAll > 0">{{pageNum}} / {{pageAll}}</view>
+            <view v-else>1 / 1</view>
+            <view @click="nextPage()">下一页</view>
+        </view>
+    </view>
 </template>
 
 <script>
@@ -71,7 +73,6 @@ export default {
                 console.log(res)
             },
         })
-        
     },
 
     data() {
@@ -172,11 +173,9 @@ export default {
                 _this.$mp.page.onShow();
             }
         },
-        /*
-        toActivityInfo(){
-            wx.navigateTo({url: '../activityInfo/main'})
+        toActivityDetails(activityNum){
+            wx.navigateTo({url: '../activityDetails/main?activityNum='+activityNum});
         },
-        */
     },
 }
 </script>
@@ -191,7 +190,6 @@ export default {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    /*border: 2rpx solid #000;*/
 }
 
 .search1 {

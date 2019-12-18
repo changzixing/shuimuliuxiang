@@ -2,12 +2,14 @@
     "pages":[
         "pages/personalpage/main",
         "pages/activitypage/main",
+        "pages/activityDetails/main",
         "pages/messagepage/main",
         "pages/personalactive/main",
         "pages/personalcertificate/main",
         "pages/userInfo/main",
         "pages/userInfoChange/main",
-        "pages/messageDetails/main"
+        "pages/messageDetails/main",
+        "pages/signupSuccessfully/main"
     ],
     "window":{
         "navigationBarBackgroundColor": "#ffffff",
