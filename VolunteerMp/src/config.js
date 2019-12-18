@@ -9,7 +9,7 @@ const userInfoChange = 'https://2019-a17.iterator-traits.com/edit_user'
 const userInfo= 'https://2019-a17.iterator-traits.com/send_user_info'
 const messageList = 'https://2019-a17.iterator-traits.com/get_message_list'
 const messageDetail = 'https://2019-a17.iterator-traits.com/get_detail_message'
-const activityInfo= 'https://2019-a17.iterator-traits.com/get_activity'
+const activityInfo = 'https://2019-a17.iterator-traits.com/get_activity'
 
 
 
@@ -20,7 +20,7 @@ const config ={
     userInfo,
     messageList,
     messageDetail,
-    activityInfo
+    activityInfo,
 }
 
 export default config

@@ -1,8 +1,8 @@
 <template>
     <view class="activityPage">
             <view class="search-1">
-                <input class="textBar" name="text">
-                <view class="searchButton">搜索</view>
+                <input class="textBar" v-model="searchText">
+                <view class="searchButton" @click="search()">搜索</view>
             </view>
             <view class="search-2">
                 <view v-for="searchFlag in searchFlags" :key="searchFlag.name" :class="searchFlag.picked ? 'searchFlag1' : 'searchFlag2'" @click="searchFlagChange(searchFlag)">{{searchFlag.value}}</view>
@@ -14,11 +14,14 @@
                 <view v-for="sortFlag in sortFlags" :key="sortFlag.name" :class="sortFlag.picked ? 'sortFlag1' : 'sortFlag2'" @click="sortFlagChange(sortFlag)">{{sortFlag.value}}</view>
             </view>
             <view class="activity-3">
-                <activitybox v-for="activity in activities" :key="activity.id" :activity="activity"></activitybox>
+                <view class="activity-3" v-if="pageAll > 0">
+                    <activitybox v-for="activity in activities" :key="activity.id" :activity="activity"></activitybox>
+                </view>
             </view>
             <view class="activity-4">
                 <view @click="lastPage()">上一页</view>
-                <view>{{pageNum}} / {{pageAll}}</view>
+                <view v-if="pageAll > 0">{{pageNum}} / {{pageAll}}</view>
+                <view v-else>1 / 1</view>
                 <view @click="nextPage()">下一页</view>
             </view>
         </view>
@@ -44,9 +47,11 @@ export default {
             dataType: "json",
             data: {
                 openID:_this.GLOBAL.openid,
+                searchKeyword:_this.searchKeyWord,
+                searchFlag:_this.searchFlag,
+                activityType:_this.activityType,
                 sortFlag:_this.sortFlag,
                 pageNum:_this.pageNum,
-                activityType:_this.activityType,
             },
             method: 'POST',
             header: { 'content-type': 'application/x-www-form-urlencoded'},
@@ -75,6 +80,7 @@ export default {
 
     data() {
         return {
+            searchText:"",
             searchKeyWord:"",
             searchFlag:"name",
             searchFlags:[
@@ -107,6 +113,19 @@ export default {
     },
 
     methods: {
+        search(){
+            var _this = this;
+            _this.searchKeyWord = _this.searchText;
+            for(var i in _this.searchFlags)
+            {
+                if(_this.searchFlags[i].picked == true)
+                {
+                    _this.searchFlag = _this.searchFlags[i].name;
+                }
+            }
+            _this.pageNum = 1;
+            _this.$mp.page.onShow();
+        },
         searchFlagChange(searchFlag){
             var _this = this;
             for(var i in _this.searchFlags)
@@ -114,7 +133,6 @@ export default {
                 _this.searchFlags[i].picked = false;
             }
             searchFlag.picked = true;
-            _this.searchFlag = searchFlag.name;
         },
         activityTypeChange(activityType){
             var _this = this;
@@ -144,7 +162,7 @@ export default {
         },
         lastPage(){
             var _this = this;
-            if(_this.pageNum > 1)
+            if(_this.pageAll > 0 && _this.pageNum > 1)
             {
                 _this.pageNum -= 1;
                 _this.$mp.page.onShow();
@@ -152,18 +170,13 @@ export default {
         },
         nextPage(){
             var _this = this;
-            if(_this.pageNum < _this.pageAll)
+            if(_this.pageAll > 0 && _this.pageNum < _this.pageAll)
             {
                 _this.pageNum += 1;
                 _this.$mp.page.onShow();
             }
         },
         /*
-        search(){
-            var _this = this;
-            wx.request({
-            })
-        },
         toActivityInfo(){
             wx.navigateTo({url: '../activityInfo/main'})
         },
@@ -184,7 +197,7 @@ export default {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    border: 2rpx solid #000;
+    /*border: 2rpx solid #000;*/
 }
 
 .search-1 {
@@ -204,26 +217,6 @@ export default {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    align-items: center;
-}
-
-.textBar {
-    width: 450rpx;
-    height: 66rpx;
-    font-size: 40rpx;
-    color: #000;
-    border: 2rpx solid rgb(122, 114, 189);
-}
-
-.searchButton {
-    width: 150rpx;
-    height: 70rpx;
-    font-size: 40rpx;
-    color: #fff;
-    background-color: rgb(122, 114, 189);
-    border-radius: 0;
-    display: flex;
-    justify-content: center;
     align-items: center;
 }
 
@@ -257,13 +250,33 @@ export default {
 }
 
 .activity-4 {
-    width: 600rpx;
+    width: 700rpx;
     height: 60rpx;
     font-size: 35rpx;
     color: rgb(122, 114, 189);
     display: flex;
     flex-direction: row;
     justify-content: space-around;
+    align-items: center;
+}
+
+.textBar {
+    width: 450rpx;
+    height: 66rpx;
+    font-size: 40rpx;
+    color: #000;
+    border: 2rpx solid rgb(122, 114, 189);
+}
+
+.searchButton {
+    width: 150rpx;
+    height: 70rpx;
+    font-size: 40rpx;
+    color: #fff;
+    background-color: rgb(122, 114, 189);
+    border-radius: 0;
+    display: flex;
+    justify-content: center;
     align-items: center;
 }
 
