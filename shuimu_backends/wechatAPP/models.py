@@ -23,10 +23,7 @@ def group_directory_path(instance, filename):
         sub_folder = "pic"
     # if ext.lower() in ["pdf", "docx"]:
     #     sub_folder = "document"
-    print(instance.activityNum)
-    print(sub_folder)
-    print(filename)
-    return os.path.join('group', instance.activityNum, sub_folder, filename)
+    return os.path.join('group', instance.groupID, sub_folder, filename)
 
 class UserInfo(models.Model):
     userName = models.CharField(max_length=50)

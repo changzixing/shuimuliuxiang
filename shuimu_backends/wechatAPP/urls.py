@@ -20,6 +20,7 @@ urlpatterns = [
     url('^follow_list$', views.follow_list),
     url('^follow_group$', views.follow_group),
     url('^unfollow_group$', views.unfollow_group),
+    url('^quit_activity$', views.quit_activity),
     url('^send_message$', views.send_message),
     url('^edit_user$', views.edit_user),
     url('^send_user_info$', views.send_user_info),
