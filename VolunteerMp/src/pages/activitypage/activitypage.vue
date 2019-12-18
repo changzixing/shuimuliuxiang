@@ -1,24 +1,24 @@
 <template>
-    <view class="activityPage">
-            <view class="search-1">
+    <view class="page">
+            <view class="search1">
                 <input class="textBar" v-model="searchText">
                 <view class="searchButton" @click="search()">搜索</view>
             </view>
-            <view class="search-2">
+            <view class="search2">
                 <view v-for="searchFlag in searchFlags" :key="searchFlag.name" :class="searchFlag.picked ? 'searchFlag1' : 'searchFlag2'" @click="searchFlagChange(searchFlag)">{{searchFlag.value}}</view>
             </view>
-            <view class="activity-1">
+            <view class="activity1">
                 <view v-for="activityType in activityTypes" :key="activityType.code" :class="activityType.picked ? 'activityType1' : 'activityType2'" @click="activityTypeChange(activityType)">{{activityType.value}}</view>
             </view>
-            <view class="activity-2">
+            <view class="activity2">
                 <view v-for="sortFlag in sortFlags" :key="sortFlag.name" :class="sortFlag.picked ? 'sortFlag1' : 'sortFlag2'" @click="sortFlagChange(sortFlag)">{{sortFlag.value}}</view>
             </view>
-            <view class="activity-3">
-                <view class="activity-3" v-if="pageAll > 0">
+            <view class="activity3">
+                <view class="activity3" v-if="pageAll > 0">
                     <activitybox v-for="activity in activities" :key="activity.id" :activity="activity"></activitybox>
                 </view>
             </view>
-            <view class="activity-4">
+            <view class="activity4">
                 <view @click="lastPage()">上一页</view>
                 <view v-if="pageAll > 0">{{pageNum}} / {{pageAll}}</view>
                 <view v-else>1 / 1</view>
@@ -37,7 +37,7 @@ export default {
     },
 
     created() {
-        console.log('activitypage ready')
+        console.log('activitypage ready');
     },
 
     onShow() {
@@ -74,10 +74,6 @@ export default {
         
     },
 
-    mounted() {
-        
-    },
-
     data() {
         return {
             searchText:"",
@@ -98,12 +94,12 @@ export default {
                 { code: '4', value: '健康残障', picked: true},
                 { code: '5', value: '其他类型', picked: true},
             ],
+            sortFlag: "time",
             sortFlags:[
                 { name: 'time', value: '时间', picked: true},
                 { name: 'hot', value: '热度', picked: false},
                 { name: 'notFull', value: '未招满', picked: false},
             ],
-            sortFlag: "time",
             activities:[
 
             ],
@@ -182,14 +178,12 @@ export default {
         },
         */
     },
-
-    
 }
 </script>
 
 <style>
-.activityPage {
-    width: 700rpx;
+.page {
+    width: 750rpx;
     height: 1050rpx;
     margin: auto;
     position: relative;
@@ -200,7 +194,7 @@ export default {
     /*border: 2rpx solid #000;*/
 }
 
-.search-1 {
+.search1 {
     width: 600rpx;
 	height: 80rpx;
     display: flex;
@@ -209,7 +203,7 @@ export default {
     align-items: center;
 }
 
-.search-2 {
+.search2 {
     width: 600rpx;
 	height: 70rpx;
     font-size: 30rpx;
@@ -220,7 +214,7 @@ export default {
     align-items: center;
 }
 
-.activity-1 {
+.activity1 {
     width: 600rpx;
     height: 120rpx;
     display: flex;
@@ -231,7 +225,7 @@ export default {
     align-content: space-around;
 }
 
-.activity-2 {
+.activity2 {
     width: 600rpx;
     height: 70rpx;
     display: flex;
@@ -240,7 +234,7 @@ export default {
     align-items: center;
 }
 
-.activity-3 {
+.activity3 {
     width: 600rpx;
     height: 640rpx;
     display: flex;
@@ -249,7 +243,7 @@ export default {
     align-items: center;
 }
 
-.activity-4 {
+.activity4 {
     width: 700rpx;
     height: 60rpx;
     font-size: 35rpx;
