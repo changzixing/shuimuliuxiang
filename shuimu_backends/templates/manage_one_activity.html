@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>管理项目</title>
+</head>
+<body style="text-align: center">
+<style>
+h1 {font-size:40px;}
+h2 {font-size:30px;}
+a {font-size:30px;}
+p {font-size:30px;}
+</style>
+<div>
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+</script>
+
+<script src="https://cdn.bootcss.com/jquery.qrcode/1.0/jquery.qrcode.min.js">
+</script>
+
+<script>
+$(document).ready(function(){
+        var url = location.search; //获取url中"?"符后的字串 ('?modFlag=business&role=1')  
+        var theRequest = new Object();     
+            var str = url.substr( 1 ); //substr()方法返回从参数值开始到结束的字符串；  
+            var activityID=str;
+            console.log(activityID);
+         $.post("manage_one_activity", 
+    {
+        activityID:activityID
+    },
+		function(activity_info_json){
+            activity_info=eval(activity_info_json);
+            var txt1=$("<p>签到二维码</p>");
+            txt1.attr('id',"start_p")
+            $("body").append(txt1);
+            var code1=$("<div></div>");
+            code1.attr('id',"code1")
+            $("#start_p").append(code1);
+            $("#code1").qrcode(activity_info[0].start_code); //任意字符串
+
+            var txt2=$("<p>结束二维码</p>");
+            txt2.attr('id',"end_p")
+            $("body").append(txt2);
+            var code2=$("<div></div>");
+            code2.attr('id',"code2")
+            $("#end_p").append(code2);
+            $("#code2").qrcode(activity_info[0].end_code); //任意字符串
+	});
+
+    $("#export_excel").click(function () {
+            var csrf=$('input[name="csrfmiddlewaretoken"]').val();
+            const req = new XMLHttpRequest();
+            req.open('POST', 'export_excel', true);
+            req.responseType = 'blob';
+            req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); //设置请求头
+            req.send("activityID="+activityID); //输入参数
+            req.onload = function() {
+            const data = req.response;
+            const a = document.createElement('a');
+            const blob = new Blob([data]);
+            const blobUrl = window.URL.createObjectURL(blob);
+            a.style.display = 'none';
+            a.download = activityID+'.xls';
+            a.href = blobUrl;
+            a.click();
+            document.body.removeChild(a);
+         };
+
+     });
+
+});
+
+</script>
+<p id="activity_list"></p>
+<div id="start_code"></div>
+<br/>
+<div id="end_code"></div>
+<br/>
+<button id="export_excel" type="button" class="btn btn-primary col-sm-5">下载本次活动信息</button>
+</div>
+</body>
+</html>
