@@ -17,9 +17,9 @@
                 {{introduction}}
             </div>
         </div>
-        <div class="userInfo-change" @click="toChange">
+        <button class="userInfo-change" @click="toChange">
             修改信息
-        </div>
+        </button>
     </div>
 </template>
 

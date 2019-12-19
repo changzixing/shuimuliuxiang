@@ -1,12 +1,9 @@
 <template>
   <div>
-    <div
-      class="messageBlock"
-      v-for="message in messages"
-      :key="message.id"
-      @click="toMessageShow(message.num)"
-    >
-      <Messagebox :message="message"></Messagebox>
+    <div class="messageBlock">
+      <div v-for="message in messages" :key="message.id" @click="toMessageShow(message.num)">
+        <Messagebox :message="message"></Messagebox>
+      </div>
     </div>
     <div class="pageChange">
       <div>上一页</div>
@@ -58,7 +55,7 @@ export default {
       wx.navigateTo({ url: "../messageShow/main?source=" + source });
     },
     nextPage() {
-      if (pageNum < pageAll) {
+      if (this.pageNum < this.pageAll) {
         var _this = this;
         wx.request({
           url: config.messageList,
@@ -75,6 +72,7 @@ export default {
               console.log(res);
               _this.messages = res.data.content;
               _this.pageAll = res.data.page;
+              _this.pageNum += 1;
             } else {
               console.log(res.errMsg);
             }
@@ -83,7 +81,7 @@ export default {
       }
     },
     lastPage() {
-      if (pageNum !== 1) {
+      if (this.pageNum !== 1) {
         var _this = this;
         wx.request({
           url: config.messageList,
@@ -100,6 +98,7 @@ export default {
               console.log(res);
               _this.messages = res.data.content;
               _this.pageAll = res.data.page;
+              _this.pageNum -= 1;
             } else {
               console.log(res.errMsg);
             }
@@ -113,8 +112,12 @@ export default {
 
 <style>
 .messageBlock {
-  height: 1050rpx;
+  height: 1250rpx;
   /* border: 2px solid rgb(202, 77, 77); */
+}
+
+Messagebox{
+  margin: 30rpx;
 }
 
 .pageChange {
@@ -125,6 +128,8 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
+
 
 .pageChange div {
   margin: 30rpx;

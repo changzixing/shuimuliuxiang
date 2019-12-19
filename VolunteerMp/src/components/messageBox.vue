@@ -1,6 +1,6 @@
 <template>
     <div class = "box">
-        <img src="../../static/images/tabbar_personalpage.png">
+        <img src="../../static/images/message.png">
         <div class="message">
             <div class="messageSource">
                 {{message.name}}
@@ -26,7 +26,7 @@ export default {
             let timestamp = Date.parse(new Date());
             let date = new Date(timestamp);
             let year_n = date.getFullYear();
-            let month_n = date.getMonth();
+            let month_n = date.getMonth() + 1;
             let date_n = date.getDate();
 
             let str = time.split(" ");     
@@ -67,7 +67,7 @@ export default {
     /*align-items: center;*/
     /* border: 2rpx solid rgb(180, 109, 109); */
     height: 100rpx;
-    margin: 10rpx;
+    margin: 20rpx;
     border: 2px solid #fff;  
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
 }
@@ -97,6 +97,7 @@ export default {
     margin: 5rpx;
     display: flex;             
     align-items: center;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 .messageInfo{
@@ -105,7 +106,8 @@ export default {
     /* border: 2rpx solid rgb(180, 109, 109); */
     margin: 5rpx;
     display: flex;             
-    align-items: center; 
+    align-items: center;
+    color: rgb(116, 106, 106);
 }
 
 .messageMore{

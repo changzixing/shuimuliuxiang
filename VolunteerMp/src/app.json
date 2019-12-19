@@ -8,7 +8,14 @@
         "pages/userInfo/main",
         "pages/userInfoChange/main",
         "pages/messageDetails/main",
-        "pages/messageShow/main"
+        "pages/messageShow/main",
+        "pages/scanpage/main",
+        "pages/personalattention/main",
+        "pages/groupDetail/main",
+        "pages/groupList/main",
+        "pages/rankpage/main",
+        "pages/signupSuccessfully/main",
+        "pages/activityDetails/main"
     ],
     "window":{
         "navigationBarBackgroundColor": "#ffffff",
@@ -31,9 +38,9 @@
     
             "text": "志愿活动",
     
-            "iconPath":"static/images/tabbar_personalpage.png",
+            "iconPath":"static/images/tabbar_activity.png",
     
-            "selectedIconPath":"static/images/tabbar_personalpage_1.png"
+            "selectedIconPath":"static/images/tabbar_activity_1.png"
     
           },
           {
@@ -42,9 +49,9 @@
     
             "text": "消息盒子",
     
-            "iconPath":"static/images/tabbar_personalpage.png",
+            "iconPath":"static/images/tabbar_messagepage.png",
     
-            "selectedIconPath":"static/images/tabbar_personalpage_1.png"
+            "selectedIconPath":"static/images/tabbar_messagepage_1.png"
     
           },
 
