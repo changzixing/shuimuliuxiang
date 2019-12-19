@@ -1,11 +1,13 @@
 
-<Script>
+<script>
+import qcloud from 'wafer2-client-sdk'
+import config from './config'
 export default{
     created() {
-        console.log('over')
+        console.log('start')
     },
 }
-</Script>
+</script>
 
 <style>
     
