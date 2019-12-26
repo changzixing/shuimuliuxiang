@@ -5,7 +5,7 @@
 <title>发布新的活动</title>
 </head>
 <body>
-<div style="margin:0 auto;width:500px;height:250px;">
+<div style="margin:0 auto;width:500px;height:250px;" id="main_div">
 <h1>发起新活动</h1>
 <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
 </script>
@@ -16,13 +16,15 @@ $(document).ready(function(){
     $.post("get_this_info",
 		function(this_info_json){
             this_info=eval(this_info_json)
-			$("[name='ad_name']").attr('value',this_info[0].name);
+						$("[name='ad_name']").attr('value',this_info[0].name);
             $("[name='ad_introduce']").attr('value',this_info[0].ad_introduce);
-
-            var pic=new Image();
+			var my_pic=$("<p>我的头像</p>")
+			place.attr('id',"my_pic")
+      $("body").append(place);
+      var pic=new Image();
 			pic.src=this_info[0].picture;
 			pic.height=150;
-			$('body').append(pic);
+			$('#my_pic').append(pic);
 			$('body').append('<br/>');
 		});
     
@@ -43,12 +45,13 @@ function check(form)
 <br/>
 团体简介<textarea type="text" value="" name="ad_introduce" style="height:200px;width:500px;"></textarea><br/>
 <br/>
-上传我的头像<input type="file" name="ad_head_pic" value=""><br/>
+上传我的头像<input type="file" name="ad_head_pic" id="ad_head" value=""><br/>
 <br/>
 <br/>
 修改密码<input type="password" name="password" value=""><br/>
 <br/>
 确认密码<input type="password" name="password_con" value=""><br/>
+<br/>
 <input type="submit" value="更新我的信息" onclick="return check(this.form)">
 </form> 
 </div>
