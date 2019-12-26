@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>审批活动</title>
+</head>
+<body style="text-align: center">
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+</script>
+<script>
+$(document).ready(function(){
+      $.post("get_approve_list",
+		function(activity_list_json){
+
+			activity_list = eval(activity_list_json)
+			
+			for(var i in activity_list)
+			{
+				var head=$("<p></p>").text("活动名称："+activity_list[i].headline);
+				head.attr('id',activity_list[i].headline)
+        		$("body").append(head);
+
+				var owner=$("<p></p>").text("活动发布方："+activity_list[i].owner);
+				owner.attr('id',activity_list[i].owner)
+        		$("body").append(owner);
+
+				var date=$("<p></p>").text("活动日期："+activity_list[i].date);
+				date.attr('id',activity_list[i].date)
+        		$("body").append(date);
+
+				var describe=$("<p></p>").text("活动介绍："+activity_list[i].describe);
+				describe.attr('id',activity_list[i].describe)
+        		$("body").append(describe);
+
+				var number=$("<p></p>").text("招募人数："+activity_list[i].number);
+				number.attr('id',activity_list[i].number)
+        		$("body").append(number);
+
+				var place=$("<p></p>").text("活动地点："+activity_list[i].place);
+				place.attr('id',activity_list[i].place)
+        		$("body").append(place);
+				
+				var pic=new Image();
+				pic.src=activity_list[i].picture;
+				console.log(pic.src)
+				pic.height=300;
+				$('body').append(pic);
+				$('body').append('<br/>');
+				
+       		 var pass_button=$('<input type="button" value="通过">');
+			pass_button.attr('id',activity_list[i].id);
+        	pass_button.attr('onclick','').click(eval(function(){pass(this.id)}));
+        	$('body').append(pass_button);
+			var deny_button=$('<input type="button" value="拒绝">');
+			deny_button.attr('id',activity_list[i].id);
+    		deny_button.attr('onclick','').click(eval(function(){deny(this.id)}));
+    		$('body').append(deny_button);
+    		$('body').append('<br/>');
+			}
+	});
+});
+
+function deny(x)
+{
+	$.post("deny_activity",
+	{
+        id:x 
+    },
+		function(){
+			alert("已拒绝通过");
+	});
+}
+
+function pass(x)
+{
+	$.post("pass_activity",
+	{
+        id:x 
+    },
+		function(){
+			alert("已通过");
+	});
+}
+
+</script>
+<p>活动列表</p>
+</body>
+</html>

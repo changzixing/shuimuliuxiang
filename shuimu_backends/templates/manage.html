@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<meta charset="utf-8"> 
+<title>我的项目</title> 
+</head>
+<body style="text-align: center">
+<style>
+h1 {font-size:40px;}
+h2 {font-size:30px;}
+a {font-size:30px;}
+p {font-size:25px;}
+</style>
+
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+</script>
+
+<script>
+$(document).ready(function(){
+      $.post("get_manage_list", 
+		function(activity_list_json){
+            activity_list = eval(activity_list_json)
+
+			for(var i in activity_list)
+			{
+				var head=$("<p></p>").text(activity_list[i].headline);
+        		head.attr('id',activity_list[i].headline)
+        		$("body").append(head);
+				if(activity_list[i].status=="-2")
+					{
+						var head=$("<p></p>").text("未通过");
+        				head.attr('id',"status")
+        				$("body").append(head);
+        				$('body').append('<br/>');
+					}
+				if(activity_list[i].status=="-1")
+					{
+						var head=$("<p></p>").text("审核中");
+        				head.attr('id',"status")
+        				$("body").append(head);
+        				$('body').append('<br/>');
+					}
+				else
+					{
+						var butto=$('<input type="button" value="查看详情">');
+                		butto.attr('id',activity_list[i].num);
+               		 	butto.attr('onclick','').click(eval(function(){skip(this.id)}));
+                		$('body').append(butto);
+                		$('body').append('<br/>');
+										$('body').append('<br/>');
+					}
+			}
+	});
+});
+
+function skip(obj)
+{
+    window.location.href = "manage_one_activity.html?"+obj;
+}
+</script>
+
+<h1>我发布的活动</h1>
+
+
+</div>
+
+	
+</body>
+</html>

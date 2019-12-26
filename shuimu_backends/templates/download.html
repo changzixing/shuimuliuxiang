@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<style type="text/css">
+		fieldset{width: 350px;height: 200px;margin: 150px 400px 0px}
+		button{maogin: 0; padding: 0}
+	</style>
+</head>
+<body>
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+</script>
+<script>
+$(document).ready(function(){
+ 	$("#export_excel").click(function () {
+         var csrf=$('input[name="csrfmiddlewaretoken"]').val();
+         const req = new XMLHttpRequest();
+         req.open('POST', 'export_excel', true);
+         req.date
+         req.responseType = 'blob';
+         req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); //设置请求头
+         req.send("filename=jjj"); //输入参数
+         req.onload = function() {
+             const data = req.response;
+             const a = document.createElement('a');
+             const blob = new Blob([data]);
+             const blobUrl = window.URL.createObjectURL(blob);
+             download(blobUrl) ;
+         };
+
+     });
+
+});
+
+function download(blobUrl) {
+  var city = $("input[name='city']").val();
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.download = '文件命名.xls';
+  a.href = blobUrl;
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+ <button id="export_excel" type="button" class="btn btn-primary col-sm-5" style="margin-left: 10px" >导出excel</button>
+</body>
+</html>

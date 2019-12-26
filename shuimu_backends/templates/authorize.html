@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div {
+    height: 100px;
+    position: absolute;
+    left: 38%;
+    top: 30%;
+    margin-top: -50px;
+}
+</style>
+<meta charset="utf-8">
+<title>添加新的志愿团体</title>
+</head>
+<body>
+<div style="margin:0 auto;width:500px;height:250px;">
+<h1>添加志愿团体账号</h1>
+<form name="input" action="add_acc" method="post">
+用户账号: <input type="text" value="" name="username"><br/>
+<br/>
+团体名称: <input type="text" value="" name="groupName"><br/>
+<br/>
+<input type="submit" value="发布" onclick="return check(this.form)">
+</form>
+<script>
+function check(form)
+{
+    if(form.ID.value=="")
+        alert(" 请输入用户账号");
+    if(form.name.value=="")
+        alert(" 请输入团体名称");
+}
+</script>
+</div>
+</body>
+</html>

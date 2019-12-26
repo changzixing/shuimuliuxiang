@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>发布新的活动</title>
+</head>
+<body>
+<div style="margin:0 auto;width:500px;height:250px;">
+<h1>发起新活动</h1>
+
+
+<form name="input" action="create_activity" method="post" enctype="multipart/form-data">
+活动名称: <input type="text" value="" name="activityName"><br/>
+<br/>
+活动地点: <input type="text" value="" name="place"><br/>
+<br/>
+<font>选择活动类型</font>
+<select name='type'>
+  <option value="0">文教</option>
+  <option value="1">赛会</option>
+  <option value="2">社区</option>
+  <option value="3">医疗</option>
+  <option value="4">健康</option>
+  <option value="5">其他</option>
+</select>
+<br/>
+<br/>
+<label>开始日期：</label><input name="startDate" type="date" value="2019-12-01"/>
+<br/>
+<label>结束日期：</label><input name="endDate" type="date" value="2019-12-01"/>
+<br/>
+招募人数: <input type="text" value="" name="peopleNeed"><br/>
+<br/>
+活动分数: <input type="text" value="" name="activityScore"><br/>
+<br/>
+活动详情<textarea type="text" value="" name="activityDescribe" style="height:200px;width:500px;"></textarea><br/>
+<br/>
+上传图片<input type="file" name="activityPoster" value=""><br/>
+<br/>
+上传活动群二维码<input type="file" id="pic" name="activityQrcode"><br/>
+<br/>
+<input type="submit" value="发布" onclick="return check(this.form)">
+<script>
+function check(form)
+{
+    //var start_time=form.start_year.value+'-'+form.start_month.value+'-'+form.start_day.value;
+    //var end_time=form.end_year.value+'-'+form.end_month.value+'-'+form.end_day.value;
+    //alert(" 请输入活动名称");
+    /*var curDate=new Date();
+    var startDate=new Date(form.startDate.value);
+    var endData=new Date(form.endData.value);
+    if(startData>endData)
+        alert("输入时间有误");*/
+    if(form.activityName.value=="")
+        alert(" 请输入活动名称");
+    if(form.place.value=="")
+        alert(" 请输入活动地点");
+    if(form.activityNum.value=="")
+        alert(" 请输入活动人数");
+    if(form.activityDescribe.value=="")
+        alert(" 请输入活动详情");
+    /*if(form.activityPoster.value==NULL||form.activityPoster.value=="")
+        alert(" 请上传活动封面");
+    if($("#pic").value==null||$("#pic").value=="")
+         alert(" 请上传活动封面");*/
+    
+}
+</script>
+</form> 
+</div>
+</body>
+</html>

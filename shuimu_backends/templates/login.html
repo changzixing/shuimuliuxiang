@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<style type="text/css">
+		fieldset{width: 350px;height: 200px;margin: 150px 400px 0px}
+		button{maogin: 0; padding: 0}
+	</style>
+</head>
+<body>
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+</script>
+<script>
+$(document).ready(function(){
+ 	$("button").click(function(){
+		$.post("login",
+		{
+			userID:$("#user").val(),
+			password:$("#pwd").val()
+		},
+		function(if_success_json){
+			console.log(if_success_json)
+
+			if_success = eval(if_success_json)
+			console.log(if_success[0])
+
+			if(if_success[0].messege=="CCYL")
+			{
+				window.open("main_homepage.html", "_self", "width=600,height=400");
+			}
+			else if(if_success[0].messege=="other")
+			{
+				window.open("homepage.html", "_self", "width=600,height=400");
+			}
+			else
+				alert(if_success[0].messege);
+		});
+	});
+});
+</script>
+
+	<fieldset>
+		<legend>用户登录</legend></br>
+		用户名：<input type="text"  id="user" value="">(请输入用户名)</br></br>
+		密码：<input type="password"  id="pwd" value="">（输入密码）<br><br>
+		<button>登 陆</button>
+	</fieldset>
+
+</body>
+</html>
