@@ -15,7 +15,8 @@ install:
     - pip install -r requirements.txt
     
 script:
-    python ./shuimu_backends/manage.py makemigrations
-    python ./shuimu_backends/manage.py migrate
+    cd ./shuimu_backends
+    python manage.py makemigrations
+    python manage.py migrate
     # python ./shuimu_backends/manage.py runserver
-    python ./shuimu_backends/manage.py test wechatAPP
+    python manage.py test wechatAPP
