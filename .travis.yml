@@ -18,5 +18,5 @@ script:
     - cd ./shuimu_backends
     - python manage.py makemigrations
     - python manage.py migrate
-    # python ./shuimu_backends/manage.py runserver
+    - python manage.py runserver
     - python manage.py test
