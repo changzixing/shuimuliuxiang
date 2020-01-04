@@ -19,4 +19,4 @@ script:
     python manage.py makemigrations
     python manage.py migrate
     # python ./shuimu_backends/manage.py runserver
-    python manage.py test wechatAPP
+    python manage.py test
