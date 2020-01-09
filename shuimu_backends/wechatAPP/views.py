@@ -30,21 +30,21 @@ secret = '6106f01b6fa163b986da283e98cf7ccb'
 
 @csrf_exempt
 def homepage(request):
-    return HttpResponse(content='hompage')
+    return HttpResponseRedirect('/login.html')
 
 
 @csrf_exempt
 def wechat_login(request):
     js_code = request.POST.get('code')
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid + '&secret=' + secret + '&js_code=' + js_code + '&grant_type=authorization_code'
-    # response = json.loads(requests.get(url).content)
-    # if 'errcode' in response:
-    #    return HttpResponse(response)
+    response = json.loads(requests.get(url).content)
+    if 'errcode' in response:
+        return HttpResponse(response)
 
-    # openid = response['openid']
-    # session_key = response['session_key']
-    openid = 'oo85p5LEN2BJ8rf1WJE0m03iM0lY'
-    session_key = 'e867Drf5jj56PkEyO9wJhg=='
+    openid = response['openid']
+    session_key = response['session_key']
+    #openid = 'oo85p5LEN2BJ8rf1WJE0m03iM0lY'
+    #session_key = 'e867Drf5jj56PkEyO9wJhg=='
 
     users = models.UserInfo.objects.filter(openID=openid)
     if len(users) == 0:
@@ -89,59 +89,6 @@ def wechat_identity(request):
         except:
             res = {'error': 'wrong'}
             return HttpResponse(content=json.dumps(res), status=400)
-
-
-'''
-@csrf_exempt
-def search_activity(request):  # 目前完成了按名字搜索
-    if request.method == 'POST':
-        try:
-            searchKeyword = request.POST.get('searchKeyword')
-            seg_list = jieba.cut_for_search(searchKeyword)
-            seg_list.sort(key=lambda x: len(x), reverse=True)
-            searchFlag = request.POST.get("searchFlag")  # 搜索方式
-            if searchFlag is None:  # 默认按名称搜索
-                searchFlag = 'name'
-            pageNum = request.POST.get("pageNum")  # 第几页
-            if pageNum is None:  # 默认第一页
-                pageNum = '1'
-            pageNum = int(pageNum) - 1
-            actList = []
-            if searchFlag == 'name':
-                for j in seg_list:
-                    objActList = ActivityInfo.objects.filter(activityName__contains=j)
-                    if len(objActList) != 0:
-                        for i in objActList:
-                            temp = {'name': i.activityName, 'number': i.activityNum,
-                                    'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                    'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
-                                    'peopleCurrent': i.peopleCurrent,
-                                    'type': i.activityType, 'address': i.activityAddress}
-                            actList.append(temp)
-            elif searchFlag == 'owner':
-                for j in seg_list:
-                    objActList = ActivityInfo.objects.filter(activityOwner__contains=j)
-                    if len(objActList) != 0:
-                        for i in objActList:
-                            temp = {'name': i.activityName, 'number': i.activityNum,
-                                    'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                    'owner': i.activityOwner, 'peopleNeed': i.peopleNeed,
-                                    'peopleCurrent': i.peopleCurrent,
-                                    'type': i.activityType, 'address': i.activityAddress}
-                            actList.append(temp)
-            else:
-                pass
-
-            resList = actList[pageNum * 5:pageNum * 5 + 5]
-            res = {'content': resList}
-            response = HttpResponse(json.dumps(res))
-            return response
-        except:
-            res = {"error": "no such activityNum"}
-            return HttpResponse(content=json.dumps(res), status=200)
-    else:
-        res = {"error": "wrong method"}
-        return HttpResponse(content=json.dumps(res), status=200)'''
 
 
 @csrf_exempt
@@ -263,9 +210,12 @@ def get_my_activity(request):  # 小程序端获得活动列表，一个demo，�
     if request.method == 'POST':
         try:
             openid = request.POST.get('openID')
-            activityType = request.POST.get('activityType')
+            activityStatus = request.POST.get('activityStatus')
             pageNum = request.POST.get('pageNum')
-
+            if pageNum is None:
+                pageNum = 1
+            pageNum = int(pageNum)
+            pageNum -= 1
             if openid is None:
                 res = {'wrong': 'no openID'}
                 response = HttpResponse(json.dumps(res))
@@ -276,36 +226,37 @@ def get_my_activity(request):  # 小程序端获得活动列表，一个demo，�
                 res = {"error": "no such user", "openID": openid}
                 return HttpResponse(json.dumps(res), status=200)
             actList = []
-            objActList = TakePartIn.objects.filter(openID=openid).order_by("startTime")
-            if activityType == 'willdo':
+            objActList = TakePartIn.objects.filter(openID=openid)
+            print(objActList)
+            if activityStatus == 'willdo':
                 for i in objActList:
                     act = ActivityInfo.objects.get(activityNum=i.activityNum)
                     if act.activityStatus == '0' or act.activityStatus == '1':
-                        temp = {'name': i.activityName, 'number': i.activityNum,
-                                'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                'owner': i.activityOwner, 'peopleNeed': i.peopleNeed, 'peopleCurrent': i.peopleCurrent,
-                                'type': i.activityType, 'address': i.activityAddress}
+                        temp = {'name': act.activityName, 'number': act.activityNum,
+                                'startDate': act.startDate.strftime('%Y-%m-%d'),
+                                'owner': act.activityOwner, 'peopleNeed': act.peopleNeed, 'peopleCurrent': act.peopleCurrent,
+                                'type': act.activityType, 'address': act.activityAddress}
                         actList.append(temp)
-            elif activityType == 'doing':
+            elif activityStatus == 'doing':
                 for i in objActList:
                     act = ActivityInfo.objects.get(activityNum=i.activityNum)
                     if act.activityStatus == '2':
-                        temp = {'name': i.activityName, 'number': i.activityNum,
-                                'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                'owner': i.activityOwner, 'peopleNeed': i.peopleNeed, 'peopleCurrent': i.peopleCurrent,
-                                'type': i.activityType, 'address': i.activityAddress}
+                        temp = {'name': act.activityName, 'number': act.activityNum,
+                                'startDate': act.startDate.strftime('%Y-%m-%d'),
+                                'owner': act.activityOwner, 'peopleNeed': act.peopleNeed, 'peopleCurrent': act.peopleCurrent,
+                                'type': act.activityType, 'address': act.activityAddress}
                         actList.append(temp)
-            elif activityType == 'done':
+            elif activityStatus == 'done':
                 for i in objActList:
                     act = ActivityInfo.objects.get(activityNum=i.activityNum)
                     if act.activityStatus == '3':
-                        temp = {'name': i.activityName, 'number': i.activityNum,
-                                'startDate': i.startDate.strftime('%Y-%m-%d'),
-                                'owner': i.activityOwner, 'peopleNeed': i.peopleNeed, 'peopleCurrent': i.peopleCurrent,
-                                'type': i.activityType, 'address': i.activityAddress}
+                        temp = {'name': act.activityName, 'number': act.activityNum,
+                                'startDate': act.startDate.strftime('%Y-%m-%d'),
+                                'owner': act.activityOwner, 'peopleNeed': act.peopleNeed, 'peopleCurrent': act.peopleCurrent,
+                                'type': act.activityType, 'address': act.activityAddress}
                         actList.append(temp)
-            resList = actList[pageNum * 5:pageNum * 5 + 5]  # 一页四个
-            page = (len(actList) - 0.99) // 5 + 1
+            resList = actList[pageNum * 6:pageNum * 6 + 6]  # 一页四个
+            page = (len(actList) - 0.99) // 6 + 1
             res = {'content': resList, 'page': page}
             response = HttpResponse(json.dumps(res))
             return response
@@ -366,6 +317,7 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
             return HttpResponse(json.dumps(res), status=200)
         try:
             user = UserInfo.objects.get(openID=openid)
+            name = user.userName
             sex = user.userSex
             studentId = user.userID
             department = user.department
@@ -374,9 +326,13 @@ def send_user_info(request):  # 发送用户信息，一个demo，需要后续�
             email = user.userMail
             interest = user.userInterest
             introduction = user.userIntro
-            res = {'sex': sex, 'volunteerId': volunteerId, 'studentId': studentId,
+            userscore = user.userScore
+            takepartin = TakePartIn.objects.filter(openID=openid)
+            count = str(len(takepartin))
+            res = {'name': name, 'sex': sex, 'volunteerId': volunteerId, 'studentId': studentId,
                    'department': department, 'phoneNumber': phoneNumber,
-                   'email': email, 'interest': interest, 'introduction': introduction}
+                   'email': email, 'interest': interest, 'introduction': introduction,
+                   'userScore': userscore, 'count': count}
             response = HttpResponse(json.dumps(res))
             return response
         except:
@@ -400,7 +356,7 @@ def get_approve_list(request):
         try:
             user = Administrator.objects.get(sessionID=sessionid)
         except:
-            return HttpResponseRedirect('/CCYL_login.html')
+            return HttpResponseRedirect('/login.html')
 
         activities = ActivityInfo.objects.filter(activityStatus='-1')
         res = []
@@ -493,6 +449,8 @@ def quit_activity(request):
             try:
                 relation = TakePartIn.objects.get(openID=openid, activityNum=activityNum)
                 relation.delete()
+                activity.peopleCurrent -= 1
+                activity.save()
                 res = {'success': 'quit'}
                 return HttpResponse(json.dumps(res))
             except:
@@ -572,7 +530,7 @@ def send_message(request):  # 向所有参加用户发送信息，一个demo，�
         if len(user) == 0:
             user = Administrator.objects.filter(sessionID=sessionid)
             if len(user) == 0:
-                return HttpResponseRedirect('/CCYL_login.html')
+                return HttpResponseRedirect('/login.html')
         try:
             activityNum = request.POST.get("activityNum")
             TakePartIn.objects.filter(activityNum=activityNum).update(hasNewMessage='1')
@@ -916,18 +874,6 @@ def create_group(request):  # 一个demo，需要后续修改与debug
 
 
 @csrf_exempt
-def edit_group_info(request):
-    if request.method == 'POST':
-        groupid = request.POST.get('groupID')
-        group = GroupInfo.objects.filter(groupID=groupid)
-        if len(group) == 0:
-            group = Administrator.objects.filter(groupID=groupid)
-            if len(group) == 0:
-                res = {'error': 'no valid group'}
-        groupintro = request.POST.get('groupIntro')
-        grouphead = request.POST
-
-@csrf_exempt
 def wechat_signin(request):
     if request.method == 'POST':
         try:
@@ -1007,7 +953,7 @@ def create_activity(request):  # 一个demo，需要后续修改与debug
         if len(user) == 0:
             user = Administrator.objects.filter(sessionID=sessionid)
             if len(user) == 0:
-                return HttpResponseRedirect('/CCYL_login.html')
+                return HttpResponseRedirect('/login.html')
         try:
             activity = ActivityInfo()
             activity.activityName = request.POST.get('activityName')
@@ -1044,7 +990,7 @@ def get_manage_list(request):
     if len(user) == 0:
         user = Administrator.objects.filter(sessionID=sessionid)
         if len(user) == 0:
-            return HttpResponseRedirect('/CCYL_login.html')
+            return HttpResponseRedirect('/login.html')
     activities = ActivityInfo.objects.filter(activityOwner=user[0].groupID)
     res = []
     for activity in activities:
@@ -1065,7 +1011,7 @@ def manage_one_activity(request):
     if len(user) == 0:
         user = Administrator.objects.filter(sessionID=sessionid)
         if len(user) == 0:
-            return HttpResponseRedirect('/CCYL_login.html')
+            return HttpResponseRedirect('/login.html')
     try:
         activity = ActivityInfo.objects.get(activityNum=activitynum)
         info = {}
@@ -1079,27 +1025,39 @@ def manage_one_activity(request):
         return HttpResponse(json.dumps(res))
 
 
-#校团委登录
+#校团委/志愿团体登录
 @csrf_exempt
-def CCYL_login(request):
+def login(request):
     if request.method == 'POST':
         username = request.POST.get("userID")
         password = request.POST.get("password")
         print(username)
-        user = Administrator.objects.filter(username=username)
-        if len(user) == 0:
-            res = [{"messege": "no such user"}]
-            return HttpResponse(json.dumps(res))
-        password = hashlib.md5(password.encode()).hexdigest()
-        if user[0].password != password:
-            res = [{"messege": "wrong password"}]
-            return HttpResponse(json.dumps(res))
-        session = ''.join(random.sample(string.ascii_letters + string.digits, 16))
-        Administrator.objects.filter(username=username).update(sessionID=session)
-        res = HttpResponse(json.dumps([{"messege": "succeed"}]))
-        res["Set-Cookie"] = "session_id=" + session
-        return res
-
+        try:
+            user = Administrator.objects.get(username=username)
+            password = hashlib.md5(password.encode()).hexdigest()
+            if user.password != password:
+                res = [{"messege": "wrong password"}]
+                return HttpResponse(json.dumps(res))
+            session = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+            Administrator.objects.filter(username=username).update(sessionID=session)
+            res = HttpResponse(json.dumps([{"messege": "CCYL"}]))
+            res["Set-Cookie"] = "session_id=" + session
+            return res
+        except:
+            try:
+                user = GroupInfo.objects.get(username=username)
+                password = hashlib.md5(password.encode()).hexdigest()
+                if user.password != password:
+                    res = [{"messege": "wrong password"}]
+                    return HttpResponse(json.dumps(res))
+                session = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+                GroupInfo.objects.filter(username=username).update(sessionID=session)
+                res = HttpResponse(json.dumps([{"messege": "other"}]))
+                res["Set-Cookie"] = "session_id=" + session
+                return res
+            except:
+                res = [{'messege': 'no valid user'}]
+                return HttpResponse(json.dumps(res))
 
 #添加志愿团体账号
 @csrf_exempt
@@ -1128,7 +1086,7 @@ def add_acc(request):
                 res = {'error': 'wrong'}
                 return HttpResponse(json.dumps(res))
         except:
-                return HttpResponseRedirect('/CCYL_login.html')
+                return HttpResponseRedirect('/login.html')
 
 
 
@@ -1161,7 +1119,7 @@ def logon(request):
 @csrf_exempt
 def page_render(request):
     path = request.path[1:]
-    if path == 'CCYL_login.html':
+    if path == 'login.html':
         return render(request, path)
     sessionid = request.COOKIES.get("session_id")
     try:
@@ -1172,40 +1130,16 @@ def page_render(request):
             res = {"error": "wrong page"}
             return HttpResponse(json.dumps(res))
     except:
-        return HttpResponseRedirect('/CCYL_login.html')
-        #return render(request, "CCYL_login.html")
-
-
-@csrf_exempt
-def login(request):
-    if request.method == 'POST':
         try:
-            username = request.POST.get("username")
-            password = request.POST.get("password")
-            users = models.UserInfo.objects.filter(username=username)
-            if len(username) == 0 or len(users) == 0:
-                res = {"error": "no such a user"}
+            GroupInfo.objects.get(sessionID=sessionid)
+            try:
+                return render(request, path)
+            except:
+                res = {"error": "wrong page"}
                 return HttpResponse(json.dumps(res))
-            if users[0].password != password:
-                res = {"error": "password is wrong"}
-                return HttpResponse(json.dumps(res))
-            if users[0].session_id != "0":
-                res = {"error": "has logged in"}
-                return HttpResponse(json.dumps(res))
-            session = ''.join(random.sample(string.ascii_letters + string.digits, 16))
-            models.UserInfo.objects.filter(username=username).update(session_id=session)
-            res = {"user": username}
-            response = HttpResponseRedirect('homepage')
-            response["Set-Cookie"] = "session_id=" + session
-            response.write(json.dumps(res))
-            return response
-            # , render_to_response('homepage.html')
         except:
-            res = {"error": "wrong"}
-            return HttpResponse(content=json.dumps(res), status=200)
-    else:
-        res = {"error": "wrong"}
-        return HttpResponse(content=json.dumps(res), status=200)
+            return HttpResponseRedirect('/login.html')
+        #return render(request, "login.html")
 
 
 @csrf_exempt
@@ -1256,7 +1190,7 @@ def pass_activity(request):
                 res = {'error': 'no valid activity'}
                 return HttpResponse(json.dumps(res))
         except:
-            return HttpResponseRedirect('/CCYL_login.html')
+            return HttpResponseRedirect('/login.html')
 
 
 @csrf_exempt
@@ -1280,7 +1214,7 @@ def deny_activity(request):
                 res = {'error': 'no valid activity'}
                 return HttpResponse(json.dumps(res))
         except:
-            return HttpResponseRedirect('/CCYL_login.html')
+            return HttpResponseRedirect('/login.html')
 
 
 @csrf_exempt
@@ -1290,7 +1224,7 @@ def export_excel(request):
     if len(user) == 0:
         user = Administrator.objects.filter(sessionID=sessionid)
         if len(user) == 0:
-            return HttpResponseRedirect('/CCYL_login.html')
+            return HttpResponseRedirect('/login.html')
     activitynum = request.POST.get('activityID')
     activityname = request.POST.get('activityName')
     takepartin = TakePartIn.objects.filter(activityNum=activitynum)
@@ -1327,3 +1261,69 @@ def export_excel(request):
         response.write(output.getvalue())
     return response
 
+
+@csrf_exempt
+def get_this_info(request):
+    if request.method == 'POST':
+        sessionid = request.COOKIES.get("session_id")
+        user = GroupInfo.objects.filter(sessionID=sessionid)
+        if len(user) == 0:
+            user = Administrator.objects.filter(sessionID=sessionid)
+            if len(user) == 0:
+                return HttpResponseRedirect('/login.html')
+        info = {}
+        info['name'] = user[0].groupName
+        info['ad_introduce'] = user[0].groupIntro
+        info['picture'] = 'media/'+str(user[0].groupHead)
+        res = [info]
+        print(res)
+        return HttpResponse(json.dumps(res))
+
+
+@csrf_exempt
+def edit_group_info(request):
+    if request.method == 'POST':
+        sessionid = request.COOKIES.get("session_id")
+        users = GroupInfo.objects.filter(sessionID=sessionid)
+        if len(users) == 0:
+            users = Administrator.objects.filter(sessionID=sessionid)
+            if len(users) == 0:
+                return HttpResponseRedirect('/login.html')
+        user = users[0]
+        name = request.POST.get('ad_name')
+        intro = request.POST.get('ad_introduce')
+        head = request.FILES.get('ad_head_pic')
+        password = request.POST.get('password')
+        password_con = request.POST.get('password_con')
+        if name is not None and len(name)!=0:
+            print(name)
+            user.groupName = name
+        if intro is not None and len(intro)!=0:
+            print(intro)
+            user.groupIntro = intro
+        if head is not None:
+            print(head)
+            user.groupHead = head
+        if password is not None and len(password)!=0:
+            if password == password_con:
+                pwd = hashlib.md5(password.encode()).hexdigest()
+                user.password = pwd
+            else:
+                res = {'wrong': 'wrong password'}
+                return HttpResponse(json.dumps(res))
+        user.save()
+        res = {'success': 'info changed'}
+        return HttpResponse(json.dumps(res))
+
+
+@csrf_exempt
+def change(request):
+    qrcode = request.FILES.get('qrcode')
+    
+
+def openid(request):
+    openid = request.POST.get('openID')
+    users = UserInfo.objects.filter(openID=openid)
+    userlen = len(users)
+    res = {'1': userlen}
+    return HttpResponse(json.dumps(res))

@@ -208,7 +208,6 @@ class TestClass(TestCase):
         req.method = "POST"
         req.POST = {"openID": "oo85p5LEN2BJ8rf1WJE0m03iM0lY", "activityStatus": "willdo", "pageNum": '1'}
         res = views.get_my_activity(req)
-        print(res)
         assert json.loads(res.content)['content'] == [] or json.loads(res.content)['content']
 
 
